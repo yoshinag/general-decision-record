@@ -10,3 +10,8 @@
 - **テンプレート**
   - [T1. Context Definitions](templates/T1_CONTEXT_DEFINITIONS.md)
   - [T2. ビルドアップ記録](templates/T2_BUILDUP_RECORD.md)
+
+- **デモ（kaizen）**
+  - [01. CLAUDE.md 改善提案](../../91_demo/kaizen/01_CLAUDE_MD改善提案.md)
+  - [02. 改善提案書の簡素化](../../91_demo/kaizen/02_改善提案書の簡素化.md)
+  - [03. 推奨プロンプト集](../../91_demo/kaizen/03_推奨プロンプト集.md)

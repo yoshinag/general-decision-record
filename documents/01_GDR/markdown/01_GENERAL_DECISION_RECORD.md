@@ -26,6 +26,7 @@ ADR と同一:
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
+- **status:** {Proposed | Approved | Implemented | Superseded}
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -36,6 +37,16 @@ ADR と同一:
 - `{PREFIX}` はドメインを示す短い識別子
 - `{番号}` は PREFIX 内の連番（3 桁ゼロ埋め: 001, 002, ...）
 - `scope` は 1 つ以上。複数の場合はカンマ区切り（例: `arch, pol`）
+- `status` は以下の 4 値:
+
+| status | 意味 |
+|---|---|
+| `Proposed` | 提案中。レビュー・承認を待っている |
+| `Approved` | 承認済み。実装に着手してよい |
+| `Implemented` | 実装済み。コードや設定に反映された |
+| `Superseded` | 代替済み。新しい GDR に置き換えられた |
+
+`Superseded` にする場合は、代替先の GDR ID を記載し、代替先からも元の GDR へリンクを貼ること（例: `Superseded by GDR-UI-003` / `Supersedes GDR-UI-001`）
 
 ## 4. scope と PREFIX
 

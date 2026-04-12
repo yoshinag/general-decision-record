@@ -10,7 +10,7 @@
 
 ## 1. 概要
 
-**GDR（General Decision Record）** は、ADR（Architectural Decision Record）の派生概念である。ADR がソフトウェアアーキテクチャに関する判断を記録する手段であるのに対し、GDR はアーキテクチャに限定せず、**仕様策定・UI 設計・運用方針・開発プロセス・ビジネス判断** を含む、プロジェクト内のあらゆる意思決定を統一的に記録する。
+**GDR（General Decision Record）** は、[ADR（Architectural Decision Record）](https://iroirotool.com/platform/ja/knowledge/hosyu_unyou/adr.html)の派生概念である。ADR がソフトウェアアーキテクチャに関する判断を記録する手段であるのに対し、GDR はアーキテクチャに限定せず、**仕様策定・UI 設計・運用方針・開発プロセス・ビジネス判断** を含む、プロジェクト内のあらゆる意思決定を統一的に記録する。
 
 「General」が示す scope は **プロジェクトや業界によって異なる**。ソフトウェア開発では architecture / UI / policy が中心になるが、製造業であれば品質管理・サプライチェーン、医療分野であれば臨床手順・規制対応がスコープに加わりうる。GDR のフレームワーク自体は scope の具体的な定義に依存しない — scope テーブルを差し替えるだけで任意のドメインに適用できる。
 
@@ -63,8 +63,8 @@ PREFIX は `GDR-{PREFIX}-{番号}` の形式で使われる、ドメインを示
 
 | # | 文書 | 内容 |
 |---|---|---|
-| 01 | [01_SCOPE_GUIDE.md](guide/01_SCOPE_GUIDE.md) | scope ガイドライン（共通 + 業種別） |
-| 02 | [02_PREFIX_GUIDE.md](guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
 | 02 | [02_AI_DRIVEN_GDR_BUILDUP.md](02_AI_DRIVEN_GDR_BUILDUP.md) | AI-Driven GDR ビルドアップ（定義 / サイクル / 原則） |
-| T1 | [templates/T1_CONTEXT_DEFINITIONS.md](templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
-| T2 | [templates/T2_BUILDUP_RECORD.md](templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録テンプレート |
+| G-01 | [01_SCOPE_GUIDE.md](guide/01_SCOPE_GUIDE.md) | scope ガイドライン（共通 + 業種別） |
+| G-02 | [02_PREFIX_GUIDE.md](guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
+| T1 | [T1_CONTEXT_DEFINITIONS.md](templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
+| T2 | [T2_BUILDUP_RECORD.md](templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録テンプレート |

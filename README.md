@@ -17,6 +17,7 @@ General Decision Record（GDR）は、あらゆる意思決定を構造化して
 |---|---|---|
 | 01 | [scope ガイドライン](documents/01_GDR/markdown/guide/01_SCOPE_GUIDE.md) | 業種別の scope 定義ガイド |
 | 02 | [PREFIX ガイドライン](documents/01_GDR/markdown/guide/02_PREFIX_GUIDE.md) | 業種別の PREFIX 定義ガイド |
+| 03 | [プロンプトガイドライン](documents/01_GDR/markdown/guide/03_PROMPT_GUIDE.md) | GDR ビルドアップの推奨プロンプト集 |
 
 ### テンプレート
 

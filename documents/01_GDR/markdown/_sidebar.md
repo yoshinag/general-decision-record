@@ -5,6 +5,7 @@
 - **ガイドライン**
   - [01. scope ガイドライン](guide/01_SCOPE_GUIDE.md)
   - [02. PREFIX ガイドライン](guide/02_PREFIX_GUIDE.md)
+  - [03. プロンプトガイドライン](guide/03_PROMPT_GUIDE.md)
 
 - **テンプレート**
   - [T1. Context Definitions](templates/T1_CONTEXT_DEFINITIONS.md)

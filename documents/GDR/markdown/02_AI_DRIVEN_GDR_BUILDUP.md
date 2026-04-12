@@ -1,4 +1,6 @@
-# 04. AI-Driven GDR ビルドアップ
+# 02. AI-Driven GDR ビルドアップ
+
+> 前提知識: [01. GDR（General Decision Record）](01_GENERAL_DECISION_RECORD.md)
 
 ## 目次
 

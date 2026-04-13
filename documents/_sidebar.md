@@ -15,3 +15,5 @@
   - [01. CLAUDE.md 改善提案](91_demo_buildup_documents.md/kaizen/01_CLAUDE_MD改善提案.md)
   - [02. 改善提案書の簡素化](91_demo_buildup_documents.md/kaizen/02_改善提案書の簡素化.md)
   - [03. 推奨プロンプト集](91_demo_buildup_documents.md/kaizen/03_推奨プロンプト集.md)
+  - [04. GDR 運用の課題と発展性](91_demo_buildup_documents.md/kaizen/04_GDR運用の課題と発展性.md)
+  - [05. 推奨ツール導入提案](91_demo_buildup_documents.md/kaizen/05_推奨ツール導入提案.md)

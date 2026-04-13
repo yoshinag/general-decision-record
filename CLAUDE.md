@@ -8,10 +8,10 @@ GDR（General Decision Record）を説明するための文書管理リポジト
 
 ```
 documents/
-├── 01_GDR/markdown/                       # GDR フレームワーク文書
+├── _sidebar.md                            # Docsify サイドバー定義
+├── 01_GDR/                                # GDR フレームワーク文書
 │   ├── 01_GENERAL_DECISION_RECORD.md      # GDR 仕様
 │   ├── 02_AI_DRIVEN_GDR_BUILDUP.md        # AI-Driven ビルドアップ
-│   ├── _sidebar.md                        # Docsify サイドバー定義
 │   ├── guide/                             # ガイドライン
 │   │   ├── 01_SCOPE_GUIDE.md
 │   │   ├── 02_PREFIX_GUIDE.md
@@ -19,7 +19,7 @@ documents/
 │   └── templates/                         # テンプレート
 │       ├── T1_CONTEXT_DEFINITIONS.md      # 前提定義書
 │       └── T2_BUILDUP_RECORD.md           # ビルドアップ記録・改善提案
-├── 91_demo/                               # デモ・改善提案
+├── 91_demo_buildup_documents.md/          # デモ・改善提案
 │   └── kaizen/
 docs/                                      # Docsify サイト（GitHub Pages 用）
 └── index.html
@@ -51,12 +51,12 @@ GDR レコードは以下の 6 フィールドを**すべて**含めること:
   - ファイル内の見出し番号
   - 他ドキュメントからの相互リンク
   - `README.md` のインデックス
-  - `documents/01_GDR/markdown/_sidebar.md`
+  - `documents/_sidebar.md`
 
 ## Docsify 運用
 
-- `docs/index.html` が Docsify のエントリポイント。markdown は `documents/01_GDR/markdown/` から直接読み込む
-- markdown ファイルの**追加・削除・リネーム**時は `documents/01_GDR/markdown/_sidebar.md` を必ず同期更新する
+- `docs/index.html` が Docsify のエントリポイント。`basePath` は `documents/` を指し、markdown を直接読み込む
+- markdown ファイルの**追加・削除・リネーム**時は `documents/_sidebar.md` を必ず同期更新する
 
 ## コミット規約
 

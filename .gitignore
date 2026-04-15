@@ -9,3 +9,4 @@ Thumbs.db
 
 # Environment
 .env
+tmp/

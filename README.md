@@ -1,31 +1,48 @@
-# General Decision Record (GDR)
+# GDR（General Decision Record）
 
-General Decision Record（GDR）は、あらゆる意思決定を構造化して記録・蓄積するためのフレームワークです。
+**GDR** は、ADR（Architectural Decision Record）を拡張し、アーキテクチャに限らず**あらゆる意思決定**を統一フォーマットで記録するフレームワークです。
+
+**AI-Driven GDR ビルドアップ**は、AI との対話を通じて GDR を反復的に積み上げながらプロジェクトを前進させる開発プロセスです。
 
 ## ドキュメント
 
-### 仕様
-
-| # | ドキュメント | 概要 |
+| # | 文書 | 内容 |
 |---|---|---|
-| 01 | [GDR 仕様](documents/01_GDR/01_GENERAL_DECISION_RECORD.md) | GDR の概要・目的・書式 |
-| 02 | [AI-Driven GDR ビルドアップ](documents/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) | AI を活用した GDR 構築プロセス |
+| 01 | [GDR 仕様](documents/01_GDR/01_GENERAL_DECISION_RECORD.md) | GDR の定義・目的・書式・scope と PREFIX |
+| 02 | [AI-Driven GDR ビルドアップ](documents/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) | ビルドアップの定義・サイクル・原則・導入方法 |
+| G-01 | [scope ガイド](documents/01_GDR/guide/01_SCOPE_GUIDE.md) | scope ガイドライン（共通 + 業種別） |
+| G-02 | [PREFIX ガイド](documents/01_GDR/guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
+| G-03 | [プロンプトガイド](documents/01_GDR/guide/03_PROMPT_GUIDE.md) | 推奨プロンプト集・短縮キーワード |
+| T1 | [前提定義書テンプレート](documents/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
+| T2 | [ビルドアップ記録テンプレート](documents/01_GDR/templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録・改善提案テンプレート |
 
-### ガイドライン
+## クイックスタート
 
-| # | ドキュメント | 概要 |
-|---|---|---|
-| 01 | [scope ガイドライン](documents/01_GDR/guide/01_SCOPE_GUIDE.md) | 業種別の scope 定義ガイド |
-| 02 | [PREFIX ガイドライン](documents/01_GDR/guide/02_PREFIX_GUIDE.md) | 業種別の PREFIX 定義ガイド |
-| 03 | [プロンプトガイドライン](documents/01_GDR/guide/03_PROMPT_GUIDE.md) | GDR ビルドアップの推奨プロンプト集 |
+1. このリポジトリを配置（clone / fork / submodule / download）
+2. プロジェクトに沿った内容で各 GDR 文書のローカライズを行う
+   - [前提定義書](documents/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md)を作成し、scope と PREFIX を定義
+   - 出力場所の定義
+   - 短縮キーワードなどの設定
+3. 「要件を伝える → AI が GDR を構造化 → レビュー → 実装」のサイクルを回す
+4. [ビルドアップ記録](documents/01_GDR/templates/T2_BUILDUP_RECORD.md)にサイクルの流れを追記していく
 
-### テンプレート
+詳細は [AI-Driven GDR ビルドアップ § 導入方法](documents/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#9-導入方法) を参照してください。
 
-| # | ドキュメント | 概要 |
-|---|---|---|
-| T1 | [Context Definitions テンプレート](documents/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) | プロジェクト情報・scope・PREFIX の定義テンプレート |
-| T2 | [ビルドアップ記録テンプレート](documents/01_GDR/templates/T2_BUILDUP_RECORD.md) | ビルドアップサイクルの記録テンプレート |
+## ディレクトリ構成
 
-## ライセンス
-
-[LICENSE](LICENSE)
+```
+documents/
+├── _sidebar.md                            # Docsify サイドバー定義
+├── 01_GDR/                                # GDR フレームワーク文書
+│   ├── 01_GENERAL_DECISION_RECORD.md      # GDR 仕様
+│   ├── 02_AI_DRIVEN_GDR_BUILDUP.md        # AI-Driven ビルドアップ
+│   ├── guide/                             # ガイドライン
+│   │   ├── 01_SCOPE_GUIDE.md
+│   │   ├── 02_PREFIX_GUIDE.md
+│   │   └── 03_PROMPT_GUIDE.md
+│   └── templates/                         # テンプレート
+│       ├── T1_CONTEXT_DEFINITIONS.md      # 前提定義書
+│       └── T2_BUILDUP_RECORD.md           # ビルドアップ記録・改善提案
+├── 91_demo_buildup_documents.md/          # 文書の出力イメージ
+│   └── kaizen/
+```

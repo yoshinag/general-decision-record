@@ -60,7 +60,7 @@ scope は「この判断が何に影響するか」を示す分類である。GD
 
 1 つの GDR が複数の scope を持つことがある（例: `arch, pol`）。
 
-業種別の scope 一覧 → [01_SCOPE_GUIDE.md](guide/01_SCOPE_GUIDE.md)
+業種別の scope 一覧 → [01_SCOPE_GUIDE.md](01_GDR/guide/01_SCOPE_GUIDE.md)
 
 ### 4.2. PREFIX — ドメイン識別子
 
@@ -68,16 +68,16 @@ PREFIX は `GDR-{PREFIX}-{番号}` の形式で使われる、ドメインを示
 
 例: `INFRA`（インフラ基盤）、`UI`（UI・UX）、`AD`（広告・収益化）、`META`（GDR 運用）
 
-業種別の PREFIX 一覧 → [02_PREFIX_GUIDE.md](guide/02_PREFIX_GUIDE.md)
+業種別の PREFIX 一覧 → [02_PREFIX_GUIDE.md](01_GDR/guide/02_PREFIX_GUIDE.md)
 
 ## 5. 関連文書
 
 | # | 文書 | 内容 |
 |---|---|---|
-| 02 | [02_AI_DRIVEN_GDR_BUILDUP.md](02_AI_DRIVEN_GDR_BUILDUP.md) | AI-Driven GDR ビルドアップ（定義 / サイクル / 原則） |
-| G-01 | [01_SCOPE_GUIDE.md](guide/01_SCOPE_GUIDE.md) | scope ガイドライン（共通 + 業種別） |
-| G-02 | [02_PREFIX_GUIDE.md](guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
-| G-03 | [03_FIRST_PROMPT_GUIDE.md](guide/03_FIRST_PROMPT_GUIDE.md) | ローカライズ初回プロンプトガイド |
-| G-04 | [04_PROMPT_GUIDE.md](guide/04_PROMPT_GUIDE.md) | プロンプトガイドライン（推奨プロンプト集） |
-| T1 | [T1_CONTEXT_DEFINITIONS.md](templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
-| T2 | [T2_BUILDUP_RECORD.md](templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録テンプレート |
+| 02 | [02_AI_DRIVEN_GDR_BUILDUP.md](01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) | AI-Driven GDR ビルドアップ（定義 / サイクル / 原則） |
+| G-01 | [01_SCOPE_GUIDE.md](01_GDR/guide/01_SCOPE_GUIDE.md) | scope ガイドライン（共通 + 業種別） |
+| G-02 | [02_PREFIX_GUIDE.md](01_GDR/guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
+| G-03 | [03_FIRST_PROMPT_GUIDE.md](01_GDR/guide/03_FIRST_PROMPT_GUIDE.md) | ローカライズ初回プロンプトガイド |
+| G-04 | [04_PROMPT_GUIDE.md](01_GDR/guide/04_PROMPT_GUIDE.md) | プロンプトガイドライン（推奨プロンプト集） |
+| T1 | [T1_CONTEXT_DEFINITIONS.md](01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
+| T2 | [T2_BUILDUP_RECORD.md](01_GDR/templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録テンプレート |

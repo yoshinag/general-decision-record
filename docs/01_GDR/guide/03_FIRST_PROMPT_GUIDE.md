@@ -1,7 +1,7 @@
 # 03. ローカライズ初回プロンプトガイド
 
 > GDR フレームワークをプロジェクトに導入する際の「最初の一言」をどう伝えるか。
-> 前提知識: [01. GDR とは](../01_GENERAL_DECISION_RECORD.md) / [02. AI-Driven GDR ビルドアップ](../02_AI_DRIVEN_GDR_BUILDUP.md)
+> 前提知識: [01. GDR とは](01_GDR/01_GENERAL_DECISION_RECORD.md) / [02. AI-Driven GDR ビルドアップ](01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md)
 
 ## 目次
 
@@ -48,8 +48,8 @@ GDR出力先: {例: documents/decisions/ documents/kaizen/}
 
 このプロンプトにより AI は:
 
-- [T1_CONTEXT_DEFINITIONS.md](../templates/T1_CONTEXT_DEFINITIONS.md) テンプレートに基づいた前提定義書を生成する
-- [scope ガイド](01_SCOPE_GUIDE.md) / [PREFIX ガイド](02_PREFIX_GUIDE.md) を参照してプロジェクトに適した scope・PREFIX を提案する
+- [T1_CONTEXT_DEFINITIONS.md](01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) テンプレートに基づいた前提定義書を生成する
+- [scope ガイド](01_GDR/guide/01_SCOPE_GUIDE.md) / [PREFIX ガイド](01_GDR/guide/02_PREFIX_GUIDE.md) を参照してプロジェクトに適した scope・PREFIX を提案する
 - 出力先ディレクトリの構成を提案する
 - CLAUDE.md の `コンテキスト短縮用キーワード` セクションを生成する
 

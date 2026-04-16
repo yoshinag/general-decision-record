@@ -5,7 +5,8 @@
 - **ガイドライン**
   - [01. scope ガイドライン](01_GDR/guide/01_SCOPE_GUIDE.md)
   - [02. PREFIX ガイドライン](01_GDR/guide/02_PREFIX_GUIDE.md)
-  - [03. プロンプトガイドライン](01_GDR/guide/03_PROMPT_GUIDE.md)
+  - [03. ローカライズ初回プロンプト](01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)
+  - [04. プロンプトガイドライン](01_GDR/guide/04_PROMPT_GUIDE.md)
 
 - **テンプレート**
   - [T1. Context Definitions](01_GDR/templates/T1_CONTEXT_DEFINITIONS.md)

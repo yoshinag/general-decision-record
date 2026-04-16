@@ -15,7 +15,8 @@ documents/
 │   ├── guide/                             # ガイドライン
 │   │   ├── 01_SCOPE_GUIDE.md
 │   │   ├── 02_PREFIX_GUIDE.md
-│   │   └── 03_PROMPT_GUIDE.md
+│   │   ├── 03_FIRST_PROMPT_GUIDE.md
+│   │   └── 04_PROMPT_GUIDE.md
 │   └── templates/                         # テンプレート
 │       ├── T1_CONTEXT_DEFINITIONS.md      # 前提定義書
 │       └── T2_BUILDUP_RECORD.md           # ビルドアップ記録・改善提案

@@ -1,7 +1,7 @@
-# 03. プロンプトガイドライン
+# 04. プロンプトガイドライン
 
 > AI-Driven GDR ビルドアップのサイクルを効率的に回すための推奨プロンプト集。
-> 前提知識: [02. AI-Driven GDR ビルドアップ](../02_AI_DRIVEN_GDR_BUILDUP.md)
+> 前提知識: [02. AI-Driven GDR ビルドアップ](../02_AI_DRIVEN_GDR_BUILDUP.md) / [03. ローカライズ初回プロンプト](03_FIRST_PROMPT_GUIDE.md)
 
 ## 目次
 

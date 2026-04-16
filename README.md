@@ -21,9 +21,7 @@
 
 1. このリポジトリを配置（clone / fork / submodule / download）
 2. プロジェクトに沿った内容で各 GDR 文書のローカライズを行う
-   - [前提定義書](docs/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md)を作成し、scope と PREFIX を定義
-   - 出力場所の定義
-   - 短縮キーワードなどの設定
+   - 03_FIRST_PROMPT_GUIDE.mdを参考に最初のプロンプトを実行する
 3. 「要件を伝える → AI が GDR を構造化 → レビュー → 実装」のサイクルを回す
 4. [ビルドアップ記録](docs/01_GDR/templates/T2_BUILDUP_RECORD.md)にサイクルの流れを追記していく
 

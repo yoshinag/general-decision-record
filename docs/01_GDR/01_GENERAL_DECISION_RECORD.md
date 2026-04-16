@@ -1,13 +1,5 @@
 # 01. GDR（General Decision Record）とは
 
-## 目次
-
-1. [概要](#1-概要)
-2. [目的](#2-目的)
-3. [書式](#3-書式)
-4. [scope と PREFIX](#4-scope-と-prefix)
-5. [関連文書](#5-関連文書)
-
 ## 1. 概要
 
 **GDR（General Decision Record）** は、[ADR（Architectural Decision Record）](https://iroirotool.com/platform/ja/knowledge/hosyu_unyou/adr.html)の派生概念である。ADR がソフトウェアアーキテクチャに関する判断を記録する手段であるのに対し、GDR はアーキテクチャに限定せず、**仕様策定・UI 設計・運用方針・開発プロセス・ビジネス判断** を含む、プロジェクト内のあらゆる意思決定を統一的に記録する。

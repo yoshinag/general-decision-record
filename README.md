@@ -20,10 +20,8 @@
 ## クイックスタート
 
 1. このリポジトリを配置（clone / fork / submodule / download）
-2. プロジェクトに沿った内容で各 GDR 文書のローカライズを行う
-   - 03_FIRST_PROMPT_GUIDE.mdを参考に最初のプロンプトを実行する
-3. 「要件を伝える → AI が GDR を構造化 → レビュー → 実装」のサイクルを回す
-4. [ビルドアップ記録](docs/01_GDR/templates/T2_BUILDUP_RECORD.md)にサイクルの流れを追記していく
+2. 「要件を伝える → AI が GDR を構造化 → レビュー → 実装」のサイクルを回す
+3. [ビルドアップ記録](docs/01_GDR/templates/T2_BUILDUP_RECORD.md)にサイクルの流れを追記していく
 
 詳細は [AI-Driven GDR ビルドアップ § 導入方法](docs/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#9-導入方法) を参照してください。
 

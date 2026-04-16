@@ -7,7 +7,8 @@ GDR（General Decision Record）を説明するための文書管理リポジト
 ## ディレクトリ構成
 
 ```
-documents/
+docs/                                      # Docsify サイト（GitHub Pages 用）
+├── index.html                             # Docsify エントリポイント
 ├── _sidebar.md                            # Docsify サイドバー定義
 ├── 01_GDR/                                # GDR フレームワーク文書
 │   ├── 01_GENERAL_DECISION_RECORD.md      # GDR 仕様
@@ -22,8 +23,6 @@ documents/
 │       └── T2_BUILDUP_RECORD.md           # ビルドアップ記録・改善提案
 ├── 91_demo_buildup_documents.md/          # デモ・改善提案
 │   └── kaizen/
-docs/                                      # Docsify サイト（GitHub Pages 用）
-└── index.html
 ```
 
 ## GDR 書式
@@ -52,12 +51,12 @@ GDR レコードは以下の 6 フィールドを**すべて**含めること:
   - ファイル内の見出し番号
   - 他ドキュメントからの相互リンク
   - `README.md` のインデックス
-  - `documents/_sidebar.md`
+  - `docs/_sidebar.md`
 
 ## Docsify 運用
 
-- `docs/index.html` が Docsify のエントリポイント。`basePath` は `documents/` を指し、markdown を直接読み込む
-- markdown ファイルの**追加・削除・リネーム**時は `documents/_sidebar.md` を必ず同期更新する
+- `docs/index.html` が Docsify のエントリポイント。markdown ファイルは `docs/` 配下に同居する
+- markdown ファイルの**追加・削除・リネーム**時は `docs/_sidebar.md` を必ず同期更新する
 
 ## コミット規約
 
@@ -68,4 +67,4 @@ GDR レコードは以下の 6 フィールドを**すべて**含めること:
 1. **"改善提案\[：|；\]\[タイトル\]":** T2_BUILDUP_RECORD.md テンプレートの構成に従って文書を生成する。
 2. **"レビュー\[：|；\]\[ファイル名\]":** 同位置にファイル名\_reviewed という形式でレビュー内容を保存する。
 3. **"レビュー反映\[：|；\]\[ファイル名\]":** 元のファイル名+\_reviewed という形式の文書の内容を把握、検討、整理して元のファイルに組み込む。反映後に \_reviewed ファイルは削除する。
-4. **"バグレポート\[：|；\]\[ファイル名\]":** documents/bug\_fix\_report/ 配下に直近のバグ内容を整理したレポート文書を作成する。
+4. **"バグレポート\[：|；\]\[ファイル名\]":** docs/bug\_fix\_report/ 配下に直近のバグ内容を整理したレポート文書を作成する。

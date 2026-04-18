@@ -17,9 +17,42 @@
       --base-font-size: 15px;
       --sidebar-width: 260px;
     }
+    #google_translate_element {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+    }
+    #translate_notice {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      z-index: 9998;
+      font-size: 11px;
+      color: #888;
+      max-width: 260px;
+      text-align: right;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
+  <div id="google_translate_element"></div>
+  <div id="translate_notice">
+    このサイトは日本語で記載されています。<br>
+    他の言語は Google 翻訳により自動翻訳されます。<br>
+    <small>This site is written in Japanese.<br>Other languages are provided via Google Translate.</small>
+  </div>
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'ja',
+        includedLanguages: 'ja,en,zh-CN,zh-TW,ko,fr,de,es,pt',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <div id="app"></div>
   <script>
     window.$docsify = {

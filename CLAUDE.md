@@ -16,6 +16,7 @@ docs/                                      # Docsify サイト（GitHub Pages �
 │   │   ├── 01_GENERAL_DECISION_RECORD.md  # GDR 仕様
 │   │   ├── 02_AI_DRIVEN_GDR_BUILDUP.md   # AI-Driven ビルドアップ
 │   │   ├── guide/                         # ガイドライン
+│   │   │   ├── 00_GETTING_STARTED.md      # Getting Started
 │   │   │   ├── 01_SCOPE_GUIDE.md
 │   │   │   ├── 02_PREFIX_GUIDE.md
 │   │   │   ├── 03_FIRST_PROMPT_GUIDE.md

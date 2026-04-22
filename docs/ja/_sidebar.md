@@ -3,6 +3,7 @@
   - [02. AI-Driven GDR ビルドアップ](01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md)
 
 - **ガイドライン**
+  - [00. Getting Started](01_GDR/guide/00_GETTING_STARTED.md)
   - [01. scope ガイドライン](01_GDR/guide/01_SCOPE_GUIDE.md)
   - [02. PREFIX ガイドライン](01_GDR/guide/02_PREFIX_GUIDE.md)
   - [03. ローカライズ初回プロンプト](01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)

@@ -10,6 +10,7 @@
   - [04. プロンプトガイドライン](01_GDR/guide/04_PROMPT_GUIDE.md)
 
 - **テンプレート**
+  - [T0. 最初の GDR サンプル](01_GDR/templates/T0_FIRST_GDR_SAMPLE.md)
   - [T1. Context Definitions](01_GDR/templates/T1_CONTEXT_DEFINITIONS.md)
   - [T2. ビルドアップ記録](01_GDR/templates/T2_BUILDUP_RECORD.md)
 

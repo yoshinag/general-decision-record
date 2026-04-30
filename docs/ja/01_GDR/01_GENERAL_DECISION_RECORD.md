@@ -18,7 +18,7 @@ ADR と同一:
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** {Proposed | Approved | Implemented | Superseded}
+- **status:** {Proposed | Implemented | Superseded}
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -29,12 +29,11 @@ ADR と同一:
 - `{PREFIX}` はドメインを示す短い識別子
 - `{番号}` は PREFIX 内の連番（3 桁ゼロ埋め: 001, 002, ...）
 - `scope` は 1 つ以上。複数の場合はカンマ区切り（例: `arch, pol`）
-- `status` は以下の 4 値:
+- `status` は以下の 3 値:
 
 | status | 意味 |
 |---|---|
-| `Proposed` | 提案中。レビュー・承認を待っている |
-| `Approved` | 承認済み。実装に着手してよい |
+| `Proposed` | 提案中。レビュー・実装に着手していない |
 | `Implemented` | 実装済み。コードや設定に反映された |
 | `Superseded` | 代替済み。新しい GDR に置き換えられた |
 
@@ -59,6 +58,8 @@ scope は「この判断が何に影響するか」を示す分類である。GD
 PREFIX は `GDR-{PREFIX}-{番号}` の形式で使われる、ドメインを示す短い識別子である。scope が「影響領域の分類」であるのに対し、PREFIX は「どのドメインの判断か」を一意に識別する。
 
 例: `INFRA`（インフラ基盤）、`UI`（UI・UX）、`AD`（広告・収益化）、`META`（GDR 運用）
+
+PREFIX と scope は同名になることがある（例: `GDR-UI-001` の `scope: ui`）。これは冗長ではなく、ドメイン識別と影響領域分類という異なる軸で記録されるため、両方を記述する。
 
 業種別の PREFIX 一覧 → [02_PREFIX_GUIDE.md](/01_GDR/guide/02_PREFIX_GUIDE.md)
 

@@ -11,17 +11,19 @@ GDR（General Decision Record）を最短で始めるためのガイドです。
 
 プロジェクトに合った方法で GDR のドキュメントを参照・取り込みます。
 
-**方法 A: サイトを参照する（推奨）**
+### 方法 A: サイトを参照する（推奨）
 
 [GDR ドキュメントサイト](https://yoshinag.github.io/general-decision-record/) を参照しながら導入を進めます。リポジトリへの取り込みは不要です。
 
-```bash
-# 方法 B: クローンして参照用に配置
-git clone https://github.com/yoshinag/general-decision-record.git
+### 方法 B: クローンして参照用に配置
 
-# 方法 C: 必要なファイルだけダウンロード
-# テンプレートとガイドを手動でコピー
+```bash
+git clone https://github.com/yoshinag/general-decision-record.git
 ```
+
+### 方法 C: 必要なファイルだけダウンロード
+
+テンプレート（T1/T2）とガイドを手動でコピーします。CLAUDE.md にコンテキスト短縮用キーワードを追記する場合は、本リポジトリの記述例を参照してください。
 
 ## Step 2: ローカライズ初回プロンプトを実行する
 
@@ -39,12 +41,12 @@ GDR出力先: {例: documents/decisions/ documents/kaizen/}
 
 AI が以下を生成・提案します:
 
-- **前提定義書**（[T1 テンプレート](../templates/T1_CONTEXT_DEFINITIONS.md)ベース）
+- **前提定義書**（[T1 テンプレート](/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md)ベース）
 - プロジェクトに適した **scope** と **PREFIX**
 - ディレクトリ構成
 - CLAUDE.md の短縮キーワード設定
 
-詳細: [ローカライズ初回プロンプトガイド](03_FIRST_PROMPT_GUIDE.md)
+詳細: [ローカライズ初回プロンプトガイド](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)
 
 ## Step 3: ビルドアップサイクルを回す
 
@@ -65,7 +67,7 @@ GDR ビルドアップの基本サイクル:
 
 | キーワード | 動作 |
 |---|---|
-| `改善提案：{タイトル}` | [T2 テンプレート](../templates/T2_BUILDUP_RECORD.md)に従って改善提案文書を生成 |
+| `改善提案：{タイトル}` | [T2 テンプレート](/01_GDR/templates/T2_BUILDUP_RECORD.md)に従って改善提案文書を生成 |
 | `レビュー：{ファイル名}` | 同位置に `{ファイル名}_reviewed` としてレビュー文書を生成 |
 | `レビュー反映：{ファイル名}` | `_reviewed` の内容を元ファイルに組み込み、`_reviewed` を削除 |
 | `バグレポート：{ファイル名}` | `bug_fix_report/` 配下にバグレポートを作成 |
@@ -75,7 +77,7 @@ GDR ビルドアップの基本サイクル:
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** Proposed | Approved | Implemented | Superseded
+- **status:** Proposed | Implemented | Superseded
 - **scope:** {scope をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -87,8 +89,8 @@ GDR ビルドアップの基本サイクル:
 
 | 文書 | 内容 |
 |---|---|
-| [GDR 仕様](../01_GENERAL_DECISION_RECORD.md) | GDR の定義・目的・書式 |
-| [AI-Driven GDR ビルドアップ](../02_AI_DRIVEN_GDR_BUILDUP.md) | ビルドアップの定義・サイクル・原則 |
-| [scope ガイド](01_SCOPE_GUIDE.md) | scope の設計ガイドライン |
-| [PREFIX ガイド](02_PREFIX_GUIDE.md) | PREFIX の設計ガイドライン |
-| [プロンプトガイド](04_PROMPT_GUIDE.md) | 推奨プロンプト集 |
+| [GDR 仕様](/01_GDR/01_GENERAL_DECISION_RECORD.md) | GDR の定義・目的・書式 |
+| [AI-Driven GDR ビルドアップ](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) | ビルドアップの定義・サイクル・原則 |
+| [scope ガイド](/01_GDR/guide/01_SCOPE_GUIDE.md) | scope の設計ガイドライン |
+| [PREFIX ガイド](/01_GDR/guide/02_PREFIX_GUIDE.md) | PREFIX の設計ガイドライン |
+| [プロンプトガイド](/01_GDR/guide/04_PROMPT_GUIDE.md) | 推奨プロンプト集 |

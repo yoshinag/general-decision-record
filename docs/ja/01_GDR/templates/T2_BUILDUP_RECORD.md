@@ -32,7 +32,7 @@
 
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** {Proposed | Approved | Implemented | Superseded}
+- **status:** {Proposed | Implemented | Superseded}
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）

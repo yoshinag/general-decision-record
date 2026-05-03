@@ -146,7 +146,7 @@ GDR ビルドアップを開始する前に、プロジェクトの scope と PR
 
 ## 9. 導入方法
 
-1. プロジェクトに GDR の出力先ディレクトリを配置する（例: `documents/decisions/`、`documents/kaizen/`。詳細は [03. ローカライズ初回プロンプトガイド](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md) 2.1 節）
+1. プロジェクトに GDR の出力先ディレクトリを配置する（推奨: `notes/{01_spec,05_knowledge,10_things,20_kaizen,80_bug_fix_report,91_gdr,99_other}/`。詳細は [03. ローカライズ初回プロンプトガイド §2.1〜2.2](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)）
 2. 前提定義書（Context Definitions）を [T1_CONTEXT_DEFINITIONS.md](/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) を雛形に作成する
 3. AI との最初の対話で scope と PREFIX を確定する（これ自体が最初の GDR になる）
 4. 以降は「要件を伝える → AI が GDR を構造化 → レビュー → 実装」のサイクルを回す

@@ -8,6 +8,7 @@
   - [02. PREFIX ガイドライン](01_GDR/guide/02_PREFIX_GUIDE.md)
   - [03. ローカライズ初回プロンプト](01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)
   - [04. プロンプトガイドライン](01_GDR/guide/04_PROMPT_GUIDE.md)
+  - [05. Claude Code セットアップ](01_GDR/guide/05_CLAUDE_CODE_SETUP.md)
 
 - **テンプレート**
   - [T0. 最初の GDR サンプル](01_GDR/templates/T0_FIRST_GDR_SAMPLE.md)

@@ -59,6 +59,7 @@ user-level の global config を配置して。
 - ~/.claude/commands/gdr-review.md
 - ~/.claude/commands/gdr-apply-review.md
 - ~/.claude/commands/gdr-bug-report.md
+- ~/.claude/commands/gdr-bugreport.md
 - ~/.claude/commands/gdr-flow.md
 - ~/.claude/commands/gdr-archive.md
 

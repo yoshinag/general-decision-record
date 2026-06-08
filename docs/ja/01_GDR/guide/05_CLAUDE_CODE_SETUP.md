@@ -6,7 +6,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 
 本ガイドは [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 から呼ばれる詳細仕様。Cursor / GitHub Copilot などを使う場合は不要。
 
-## 配置するファイル（7 ファイル）
+## 配置するファイル（8 ファイル）
 
 | 配置パス | 役割 |
 |---|---|
@@ -15,6 +15,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 | `~/.claude/commands/gdr-review.md` | スラッシュコマンド `/gdr-review <ファイル名>` の定義 |
 | `~/.claude/commands/gdr-apply-review.md` | スラッシュコマンド `/gdr-apply-review <ファイル名>` の定義 |
 | `~/.claude/commands/gdr-bug-report.md` | スラッシュコマンド `/gdr-bug-report <識別子>` の定義 |
+| `~/.claude/commands/gdr-bugreport.md` | スラッシュコマンド `/gdr-bugreport <タイトル>` の定義（**セッション経緯の保存**用） |
 | `~/.claude/commands/gdr-flow.md` | スラッシュコマンド `/gdr-flow <作業指示>` の定義 |
 | `~/.claude/commands/gdr-archive.md` | スラッシュコマンド `/gdr-archive <パス>` の定義 |
 
@@ -50,11 +51,14 @@ argument-hint: <引数の形式>
 | `gdr-kaizen.md` | GDR T2 形式の改善提案を `notes/20_kaizen/` 配下に生成 | `<タイトル>` | `notes/20_kaizen/{YYYY-MM-DD}_{slug}.md` に T2 構成のドラフト生成。文書のみ生成、実装着手しない |
 | `gdr-review.md` | 対象ファイルをセルフレビューし `{filename}_reviewed.md` を生成 | `<ファイル名 or 相対パス>` | 同位置に `{元ファイル名}_reviewed.md` を出力。横断レビューは `notes/91_gdr/review/` 配下。区分 A〜G で整理 |
 | `gdr-apply-review.md` | `_reviewed.md` の内容を本体に統合し `_reviewed.md` を削除 | `<元ファイル名 or _reviewed.md ファイル名>` | A / D / E は必ず反映、B / C / F / G は必要に応じて。統合後 `_reviewed.md` を削除し 1 コミット |
-| `gdr-bug-report.md` | バグレポートを `notes/80_bug_fix_report/` 配下に生成 | `<識別子 / ファイル名 / 症状概要>` | `notes/80_bug_fix_report/{slug}.md` に 10 項構成（メタ / 症状 / 再現 / 原因 / 影響 / 回避策 / 修正案 / 推奨 / 既知事項 / 次のアクション）で起票 |
+| `gdr-bug-report.md` | バグレポートを `notes/80_bug_fix_report/` 配下に生成 | `<識別子 / ファイル名 / 症状概要>` | `notes/80_bug_fix_report/{slug}.md` に 10 項構成（メタ / 症状 / 再現 / 原因 / 影響 / 回避策 / 修正案 / 推奨 / 既知事項 / 次のアクション）で起票。**任意の識別子から書き起こす**（外部報告 / 後日まとめ向き） |
+| `gdr-bugreport.md` | **現セッションの内容**からエラー / 問題を抽出してバグレポートを生成（経緯保存） | `<タイトル or 対象範囲（省略可）>` | セッション文脈（tool 失敗 / stderr / 試行錯誤 / Classifier deny 等）を抽出し `notes/80_bug_fix_report/{YYYY-MM-DD}_{slug}.md` を生成。末尾に「**セッションログ抜粋**」セクション（AI が試したアプローチの時系列、判断転換点、deny 原文）を残し、後日別セッションでトレース可能にする。`/gdr-bug-report` との違いは「**セッション内容ベース vs 任意識別子ベース**」 |
 | `gdr-flow.md` | 進行状況を確認し GDR ビルドアップサイクルをノンストップで前進 | `<作業指示 or トピック>` | 現在地（会話文脈 / `git log` / `notes/` ファイル状態）を判定し**次フェーズだけ**実行（巻き戻し禁止）。フェーズ: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理 |
 | `gdr-archive.md` | 対象ファイル / ディレクトリを `notes/_archive/` 配下へ退避（AI デフォルト除外領域） | `<ファイル or ディレクトリのパス>` | `git mv` で `notes/_archive/{元のパス}` に退避し 1 コミット。同名既存ファイル時はエラー終了。ディレクトリ指定時はディレクトリごと退避。物理削除はユーザー手動 (`rm`) |
 
 > **キーワードとスラッシュコマンドの住み分け:** 短縮キーワード（`改善提案：` 等）は自然文中の流れで使う。スラッシュコマンド（`/gdr-kaizen` 等）は Tab 補完で発見性が必要な場面で使う。両方とも生きている。
+
+> **`gdr-bug-report` と `gdr-bugreport` の使い分け（命名がハイフン有無で紛らわしいので明記）:** 既存の `バグレポート：` キーワードに対応するのは `/gdr-bug-report`（ハイフンあり）。一方 `/gdr-bugreport`（ハイフンなし）は**セッション内で起きたことの経緯保存に特化した補助コマンド**で、対応キーワードを持たない。Classifier deny / hook block / 試行錯誤の判断転換点など、現セッション固有の情報を抽出してレポート化する。
 
 ### `gdr-archive.md` 内容例
 

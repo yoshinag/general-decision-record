@@ -91,6 +91,14 @@ argument-hint: <引数の形式>
 
 現在 4 コマンド（`/gdr-bug-report` `/gdr-flow` `/gdr-review` `/gdr-apply-review`）が 2 モード対応。残る 2 コマンド（`/gdr-kaizen` `/gdr-archive`）は適合外として 1 モード運用を継続する。
 
+### モード B の誤特定時のロールバック
+
+モード B で AI が「自動特定」を誤った場合、いずれのコマンドも **1 コミット単位で完結している**ため、`git revert HEAD` で安全に元に戻せる。退避（`/gdr-archive`）と統合（`/gdr-apply-review`）も `git mv` / `_reviewed.md` 削除を含めて 1 コミットになるよう設計されているため、巻き戻し手順は共通。
+
+- 誤特定が明らかになった時点で速やかに `git revert` する（隠さない）
+- revert 後、引数ありモード（モード A）で再実行する
+- 同種の誤特定が複数回繰り返される場合は、本ガイドラインの判定基準（破壊的操作 / 引数依存度）を再評価する
+
 ### `gdr-archive.md` 内容例
 
 ```markdown

@@ -112,6 +112,7 @@ GDR ビルドアップは万能ではない。導入時に認識しておくべ�
 **判断更新時の運用ルール:**
 - 軽微な追記・誤りの修正は元の GDR を直接編集してよい
 - **判断の本質が変わる場合は、元の GDR を編集せず、新しい GDR を発行して元を `Superseded` にする**（相互リンク必須）。判断履歴の追跡可能性を確保するため
+- **Superseded 後の二段保管（推奨）:** `GDR_INDEX` に「GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived」の 1 行サマリを残し、本文ファイルは `notes/_archive/91_gdr/gdr/` に退避する（[03 §2.2](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md#22-推奨ディレクトリ構成) の退避領域 / `アーカイブ：` キーワード / `/gdr-archive` を利用）。AI は INDEX で置換関係と再検討条件を把握でき、過去議論の詳細はトークン文脈から除外される
 
 ### 5.3. 実装が判断を検証する（Implementation Validates Decision）
 

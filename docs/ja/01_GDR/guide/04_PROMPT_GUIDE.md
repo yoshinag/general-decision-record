@@ -76,10 +76,11 @@ CLAUDE.md（プロジェクトルートの AI エージェント向け指示フ�
 | **レビュー反映** | `レビュー反映：[ファイル名]` | `_reviewed` ファイルの内容を検討・整理して元ファイルに組み込み、`_reviewed` ファイルを削除する |
 | **バグレポート** | `バグレポート：[ファイル名]` | `notes/80_bug_fix_report/` 配下にバグ内容を整理したレポート文書を作成する |
 | **一気通貫** | `一気通貫：[指示など]` | 進行状況を会話文脈 / `git log` / `notes/` 配下のファイル状態から判定し、**次フェーズだけ**実行する（巻き戻し禁止）。フェーズ順: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理 |
+| **アーカイブ** | `アーカイブ：[ファイル or ディレクトリ]` | 対象を `notes/_archive/{元のディレクトリ}/{元のファイル名}` に `git mv` で退避し 1 コミット。同名既存ファイルがある場合はエラー終了。ディレクトリ指定時はディレクトリごと退避。AI は退避領域をデフォルト読み込みしない。物理削除はユーザー手動 (`rm`) |
 
 > 出力先パスは推奨標準（[ローカライズ初回プロンプトガイド §2.2](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md)）に準拠。プロジェクト固有の出力先（`documents/...` など）を採用している場合はそちらに読み替える。
 
-> **Claude Code 利用者向け:** 上記キーワードは `~/.claude/commands/gdr-*.md` で同等のスラッシュコマンド（`/gdr-kaizen` / `/gdr-review` / `/gdr-apply-review` / `/gdr-bug-report` / `/gdr-flow`）としても利用できる。配置手順は [05. Claude Code セットアップ](/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) を参照。
+> **Claude Code 利用者向け:** 上記キーワードは `~/.claude/commands/gdr-*.md` で同等のスラッシュコマンド（`/gdr-kaizen` / `/gdr-review` / `/gdr-apply-review` / `/gdr-bug-report` / `/gdr-flow` / `/gdr-archive`）としても利用できる。配置手順は [05. Claude Code セットアップ](/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) を参照。
 
 ### 仕組み
 

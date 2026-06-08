@@ -39,6 +39,8 @@ ADR と同一:
 
 `Superseded` にする場合は、代替先の GDR ID を記載し、代替先からも元の GDR へリンクを貼ること（例: `Superseded by GDR-UI-003` / `Supersedes GDR-UI-001`）
 
+**二段保管の推奨:** Superseded 化した GDR は、`GDR_INDEX` に「GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived」の 1 行サマリを残したうえで、本文ファイルを `notes/_archive/91_gdr/gdr/` へ退避する運用を推奨する。AI は INDEX の 1 行で置換関係と再検討条件を把握でき、詳細議論本文は読まずに済むため、トークン消費が抑えられる。詳細は [02. AI-Driven GDR ビルドアップ §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) を参照。
+
 ## 4. scope と PREFIX
 
 GDR の書式（3 章）に登場する 2 つの分類軸を定義する。

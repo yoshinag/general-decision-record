@@ -1,5 +1,7 @@
 # Claude Code セットアップガイド
 
+> 前提知識: [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 / [04. プロンプトガイドライン §6 コンテキスト短縮キーワード](/01_GDR/guide/04_PROMPT_GUIDE.md#6-コンテキスト短縮キーワードclaudemd-連携)
+
 Claude Code を使う場合、`~/.claude/` 配下に **user-level の global config** を配置すると、すべてのプロジェクトで GDR 方法論と短縮キーワード / スラッシュコマンドが自動有効になる。
 
 本ガイドは [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 から呼ばれる詳細仕様。Cursor / GitHub Copilot などを使う場合は不要。

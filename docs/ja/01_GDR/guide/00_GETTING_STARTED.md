@@ -1,5 +1,7 @@
 # Getting Started with GDR
 
+> 前提知識: [01. GDR とは](/01_GDR/01_GENERAL_DECISION_RECORD.md)（書式と基本概念）/ [02. AI-Driven GDR ビルドアップ](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md)（サイクルと原則）。本ガイドは規範文書を読まずに最短で導入したい読者向けの実践導線。
+
 GDR（General Decision Record）を最短で始めるためのガイドです。
 
 ## 前提

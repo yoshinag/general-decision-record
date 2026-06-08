@@ -74,6 +74,16 @@ GDR フレームワーク自体は出力先に依存しないが、新規プロ�
 
 番号体系は「01〜09: 仕様系 / 10〜19: 横断 / 20〜79: 提案系 / 80〜89: 報告系 / 90〜99: メタ系」のような余白を残してある。プロジェクト固有の追加バケット（例: `40_design/` `60_review/`）は同じ番号原則で配置する。
 
+**`notes/91_gdr/` 配下のサブ構造（推奨）:**
+
+| パス | 役割 |
+|---|---|
+| `notes/91_gdr/00_CONTEXT_DEFINITIONS.md` | 前提定義書（[T1](/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) ベース） |
+| `notes/91_gdr/INDEX.md` | GDR_INDEX（全 GDR レコードの一覧） |
+| `notes/91_gdr/gdr/` | GDR レコード本体（PREFIX 単位 or 連番でファイル分割） |
+| `notes/91_gdr/_reference/` | 上流リポジトリ（`yoshinag/general-decision-record`）から取得した**編集禁止スナップショット**。テンプレート / ガイドの参照用 |
+| `notes/91_gdr/review/` | 複数 GDR や複数文書を横断するレビュー文書の出力先 |
+
 `GDR出力先` の指定例:
 
 ```
@@ -93,6 +103,8 @@ GDR出力先: notes/{01_spec,05_knowledge,10_things,20_kaizen,80_bug_fix_report,
 | 既存の制約 | − | 提案の精度向上 | モノレポ構成、既存の ADR など |
 
 ## 4. 業種別の記述例
+
+> 以下は代表的な 4 業種の記述例。**他業種**（医療 / 金融 / 教育 / ゲーム / インフラ・DevOps / 観光 等）も、同じプロンプト骨格（プロジェクト名 / ドメイン / 概要 / 主な関心事 / GDR 出力先 / 短縮キーワード）に [scope ガイド](/01_GDR/guide/01_SCOPE_GUIDE.md) と [PREFIX ガイド](/01_GDR/guide/02_PREFIX_GUIDE.md) の該当章を組み合わせれば展開可能。`ドメイン` 欄に複数業種をカンマ区切りで書けば、AI が両方の業種別 scope/PREFIX を提案する。
 
 ### 4.1. Web アプリケーション開発
 

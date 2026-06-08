@@ -48,8 +48,8 @@ argument-hint: <引数の形式>
 | ファイル | description | argument-hint | 動作の要点 |
 |---|---|---|---|
 | `gdr-kaizen.md` | GDR T2 形式の改善提案を `notes/20_kaizen/` 配下に生成 | `<タイトル>` | `notes/20_kaizen/{YYYY-MM-DD}_{slug}.md` に T2 構成のドラフト生成。文書のみ生成、実装着手しない |
-| `gdr-review.md` | 対象ファイルをセルフレビューし `{filename}_reviewed.md` を生成 | `<ファイル名 or 相対パス>` | 同位置に `{元ファイル名}_reviewed.md` を出力。横断レビューは `notes/91_gdr/review/` 配下。区分 A〜G で整理 |
-| `gdr-apply-review.md` | `_reviewed.md` の内容を本体に統合し `_reviewed.md` を削除 | `<元ファイル名 or _reviewed.md ファイル名>` | A / D / E は必ず反映、B / C / F / G は必要に応じて。統合後 `_reviewed.md` を削除し 1 コミット |
+| `gdr-review.md` | 対象ファイルをセルフレビューし `{filename}_reviewed.md` を生成（引数有無で 2 モード） | `[<ファイル名 or 相対パス>]` | **引数あり:** 指定ファイルをレビュー。**引数なし:** 直近会話で言及されたファイル / `git status` の modified / `git log --name-only -3` から自動特定。候補複数なら AskUserQuestion。同位置に `{元ファイル名}_reviewed.md` を出力（横断レビューは `notes/91_gdr/review/` 配下）。区分 A〜G で整理 |
+| `gdr-apply-review.md` | `_reviewed.md` の内容を本体に統合し `_reviewed.md` を削除（引数有無で 2 モード） | `[<元ファイル名 or _reviewed.md ファイル名>]` | **引数あり:** 指定の `_reviewed.md` を統合。**引数なし:** `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion で確認。A / D / E は必ず反映、B / C / F / G は必要に応じて。統合後 `_reviewed.md` を削除し 1 コミット |
 | `gdr-bug-report.md` | バグレポートを `notes/80_bug_fix_report/` 配下に生成（引数有無で 2 モード） | `[<識別子 / ファイル名 / 症状概要>]` | **引数あり:** 任意識別子から書き起こす（外部報告 / 後日まとめ向き）。**引数なし:** **現セッションの内容**（tool 失敗 / stderr / 試行錯誤 / Classifier deny 等）を自動抽出し、末尾に「**セッションログ抜粋**」セクション（AI が試したアプローチの時系列・判断転換点・deny 原文）を残して**経緯保存**する。両モードとも 10 項構成（メタ / 症状 / 再現 / 原因 / 影響 / 回避策 / 修正案 / 推奨 / 既知事項 / 次のアクション） |
 | `gdr-flow.md` | 進行状況を確認し GDR ビルドアップサイクルをノンストップで前進（引数有無で 2 モード） | `[<作業指示 or トピック>]` | **引数あり:** 指定作業の現在地（会話文脈 / `git log` / `notes/` ファイル状態）を判定し**次フェーズだけ**実行（巻き戻し禁止）。**引数なし:** **セッション全体を概観**し進行中の作業を自動特定（直近会話 / `git log -10` / 未コミット差分 / 最近変更された `notes/` 配下）、作業の核を 1 文で言語化してから現在地判定 → 完走。曖昧時は AskUserQuestion で確認。フェーズ: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理 |
 | `gdr-archive.md` | 対象ファイル / ディレクトリを `notes/_archive/` 配下へ退避（AI デフォルト除外領域） | `<ファイル or ディレクトリのパス>` | `git mv` で `notes/_archive/{元のパス}` に退避し 1 コミット。同名既存ファイル時はエラー終了。ディレクトリ指定時はディレクトリごと退避。物理削除はユーザー手動 (`rm`) |
@@ -71,6 +71,8 @@ argument-hint: <引数の形式>
 |---|---|---|
 | `/gdr-bug-report` | 任意識別子から書き起こす（外部報告 / 後日まとめ向き） | 現セッションのエラー / 試行錯誤 / Classifier deny を抽出して**経緯保存**。末尾に「セッションログ抜粋」を追加 |
 | `/gdr-flow` | 指定作業の現在地を判定して次フェーズだけ実行 | セッション全体を概観し進行中の作業を自動特定 → 作業の核を 1 文で言語化 → 現在地判定 → 完走 |
+| `/gdr-review` | 指定ファイルをセルフレビュー | 直近会話言及 / `git status` modified / `git log --name-only -3` から対象を自動特定。複数候補なら AskUserQuestion |
+| `/gdr-apply-review` | 指定 `_reviewed.md` を本体に統合 | `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion |
 
 ### 2 モード対応の書き方
 
@@ -85,11 +87,9 @@ argument-hint: <引数の形式>
 | コマンド | 2 モード化適合性 | 備考 |
 |---|---|---|
 | `gdr-kaizen` | 適合外 | タイトル指定が本質的に必要。引数なしで「セッションから改善案を提案」は提案責任が AI に偏りすぎ |
-| `gdr-review` | 候補 | 引数なしで「直近編集された `notes/` 配下のファイル」をセルフレビュー対象として自動特定する余地あり。未着手 |
-| `gdr-apply-review` | 候補 | 引数なしで「最新の `_reviewed.md`」を統合対象として自動特定する余地あり。未着手 |
 | `gdr-archive` | 適合外 | 退避という破壊的操作で対象を AI が自動特定するリスクが高い。常に明示パス指定とする |
 
-候補コマンドへの実適用は「ユースケースが反復して観測された時点」で検討する。現状は `/gdr-bug-report` `/gdr-flow` の 2 件のみで運用を始める。
+現在 4 コマンド（`/gdr-bug-report` `/gdr-flow` `/gdr-review` `/gdr-apply-review`）が 2 モード対応。残る 2 コマンド（`/gdr-kaizen` `/gdr-archive`）は適合外として 1 モード運用を継続する。
 
 ### `gdr-archive.md` 内容例
 

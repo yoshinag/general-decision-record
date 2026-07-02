@@ -10,6 +10,7 @@
 | GDR-META-020 | 取り込み単位は GDR レコードとし、`(project, gdr_id)` を複合キーにする | Proposed |
 | GDR-META-021 | 検索エンジンは SQLite + FTS5(trigram) + sqlite-vec のハイブリッドとし、embedding は差し替え可能な IF でローカル既定にする | Proposed |
 | GDR-META-022 | 利用面は CLI + MCP サーバ（user scope）とし、`/gdr-docs` 完了処理を sync の標準トリガにする | Proposed |
+| GDR-META-023 | 同期は「ファイル → DB」の一方向・結果整合とし、正しさの根拠を rebuild に置く | Proposed |
 
 ---
 
@@ -73,7 +74,7 @@
 
 - **status:** Proposed
 - **scope:** meta, pol
-- **決定:** 利用面は 2 つ提供する。(1) CLI: `gdr-index sync / search / rebuild / lint`、(2) **MCP サーバ**（読み取り専用）: `gdr_search(query, project?, scope?, status?, k)` / `gdr_get(project, gdr_id)`（supersede チェーン込み）/ `gdr_list_projects()`。MCP は Claude Code にユーザスコープで登録し、**全プロジェクトのセッションから横断参照可能**にする。取り込みトリガは手動 `sync` を基本とし、`/gdr-docs`（完了処理）の最終ステップに sync 実行を 1 行統合する。統合は**ツールが PATH に存在する場合のみ実行し、無ければ無音でスキップする**（方法論の標準コマンドはコンパニオンツールにハード依存しない）。git hook・常駐デーモンは作らない。最終形（フェーズ 4）として `/gdr-flow` 起票フェーズでの類似判断自動照会を目指す
+- **決定:** 利用面は 2 つ提供する。(1) CLI: `gdr-index sync / search / rebuild / lint / status / verify`、(2) **MCP サーバ**（読み取り専用）: `gdr_search(query, project?, scope?, status?, k)` / `gdr_get(project, gdr_id)`（supersede チェーン込み）/ `gdr_list_projects()` / `gdr_status()`（インデックス鮮度の確認）。MCP は Claude Code にユーザスコープで登録し、**全プロジェクトのセッションから横断参照可能**にする。取り込みトリガは手動 `sync` を基本とし、`/gdr-docs`（完了処理）の最終ステップに sync 実行を 1 行統合する。統合は**ツールが PATH に存在する場合のみ実行し、無ければ無音でスキップする**（方法論の標準コマンドはコンパニオンツールにハード依存しない）。git hook・常駐デーモンは作らない。最終形（フェーズ 4）として `/gdr-flow` 起票フェーズでの類似判断自動照会を目指す
 - **理由:** 検索の価値が最大化するのは「新しい判断をする瞬間」であり、それはエディタでも Web でもなく AI セッションの中にある — MCP 統合が本命なのはこのため。起票時に過去の類似判断が自動で添えられれば、目的 3「同じ議論の繰り返しを防ぐ」が仕組みとして閉じる。トリガを完了処理に置くのは、ビルドアップサイクル（起票 → … → 完了処理）の既存の節目に相乗りする方が、hook 追加より運用負荷が低いため
   - **代替案 A:** cron による常時 sync → 導入初期には過剰。sync 忘れが頻発したら足せばよい
   - **代替案 B:** git post-commit hook → 全プロジェクトへの配布・保守が発生し、明示列挙 config と二重管理になる。git 管理でないプロジェクトを取りこぼす点でも不適。却下
@@ -84,6 +85,26 @@
 - **再検討条件:**
   - sync 忘れによるインデックス鮮度の劣化が頻発 → cron / hook の導入を検討
   - MCP ツールの応答がセッション文脈を圧迫する → 返却フォーマットの要約化・件数制限の見直し
+
+
+**GDR-META-023: 同期は「ファイル → DB」の一方向・結果整合とし、正しさの根拠を rebuild に置く**
+
+- **status:** Proposed
+- **scope:** meta, arch
+- **決定:** 同期はファイル → DB の**一方向のみ**とし、sync は冪等・決定的な純関数（同じソースなら同じ DB）として実装する。一貫性モデルは**結果整合 + 明示的な鮮度表示**とし、強整合は狙わない。トリガは層別に置く — 主経路は `/gdr-docs` 完了処理後の自動 sync、強い鮮度が必要な唯一の場面（フェーズ 4 の起票時照会）は**照会直前の sync** を `/gdr-flow` 側で仕様化（読み側同期）、保険の夜間 cron は既定オフ。増分同期は **2 段階ハッシュ**（段階 1: `files` 台帳と path / size / mtime の比較で不変ファイルをスキップ → 段階 2: 変更ファイルのみパースし record content_hash 比較 → 変更レコードだけ upsert + 再 embed）による**速度の最適化**であり、**正しさの根拠は常に rebuild** — `verify`（全件読み直し突合・レポートのみ）で drift を検知したら作り直し、スキーマ / 正規化ロジック / embedding モデルの変更時は自動 full rebuild する。消滅検知はプロジェクト単位の全対象走査との突合で行い、active → `archived` → `deleted` の状態遷移を判定する（`(project, gdr_id)` が同一性を担うため、ファイル移動・アーカイブ退避にも自然に追随する）。同時実行は WAL モード + sync の flock（単一 writer）+ MCP の read-only 接続（`mode=ro`）で単純化する
+- **理由:** 書き戻し経路がゼロ（MCP は read-only、CLI の書き込みは sync のみ）のため、双方向同期の難所である衝突解決が構造的に存在せず、**同期問題はキャッシュ無効化問題に還元できる**。GDR の変更頻度は 1 日数回オーダー・鮮度要求はセッション単位であり、強整合に払うコストに見合う場面がない。また方法論自体が「GDR はサイクルの節目（起票・status 更新・アーカイブ）で変わる」ことを規律しているため、節目である完了処理にトリガを置けばほぼ全変更をカバーできる — イベント駆動の複雑さが不要なのは方法論の規律の配当である
+  - **代替案 A:** fswatch / FSEvents 等のファイル監視デーモンによる準リアルタイム同期 → 常駐プロセス管理・スリープ復帰時のイベント欠落・プロジェクトごとの watch 設定という運用コストに対し、セッション単位の鮮度要求では改善の使い道がない。却下（GDR-META-022「常駐デーモンは作らない」と整合）
+  - **代替案 B:** 増分同期の正しさをテスト網羅で担保し rebuild を非常手段に格下げ → 「作り直しが数秒で終わる」規模を活かす方が安い。増分は最適化と割り切る
+  - **代替案 C:** 強整合（検索のたびに同期）→ 検索レイテンシに毎回同期コストが乗る。鮮度要求に対して過剰。却下
+- **影響:**
+  - スキーマに `files`（増分検知の台帳）と `sync_log`（鮮度の記録）を追加する（§4.2）
+  - MCP に read-only の鮮度確認 `gdr_status()` を追加し、検索応答に `last_sync` を添える — AI が古さを検知したら Bash 経由で `gdr-index sync` を実行して再検索でき、**read-only 原則を破らずに鮮度問題が解決する**
+  - CLI に `status`（stale check）と `verify`（突合検査）が加わる
+  - 典型 sync（変更 1〜2 ファイル）はサブ秒で完了し `/gdr-docs` の体感を損なわない（embed は変更レコードのみ）
+- **再検討条件:**
+  - sync 忘れ・鮮度劣化が実害として頻発 → 夜間 cron の既定有効化（GDR-META-022 の再検討条件と連動）
+  - `verify` での drift 検出が繰り返される → 増分ロジックの見直し、または増分の廃止（毎回 rebuild）
+  - レコード数の増加で rebuild が「気軽に作り直せる」時間でなくなる → 増分同期の正しさへの投資に方針転換
 
 ---
 
@@ -99,14 +120,15 @@
 
 ## 3. 改善案
 
-プロジェクト内の GDR 文書を正とする再構築可能な派生インデックス **gdr-index**（仮称）を導入し、4 つの GDR で「位置づけ」「データモデル」「検索エンジン」「利用面」を定義する。
+プロジェクト内の GDR 文書を正とする再構築可能な派生インデックス **gdr-index**（仮称）を導入し、5 つの GDR で「位置づけ」「データモデル」「検索エンジン」「利用面」「同期モデル」を定義する。
 
 1. **位置づけ: 三層構造の第三層（長期記憶）**（GDR-META-019）— アクティブ GDR / INDEX 1 行 / DB オンデマンド検索
 2. **データモデル: レコード単位・複合キー・フィールド分解**（GDR-META-020）— 実測で裏付けたパース仕様と lint
 3. **エンジン: SQLite + FTS5(trigram) + sqlite-vec ハイブリッド**（GDR-META-021）— 日本語対応と運用ゼロの両立
 4. **利用面: CLI + MCP（user scope）**（GDR-META-022）— 全セッションからの横断リコール、最終形は起票フェーズ統合
+5. **同期モデル: 一方向・結果整合・rebuild が正しさの根拠**（GDR-META-023）— 節目トリガ + 読み側同期 + 鮮度の可視化
 
-導入は 4 フェーズの段階投入（§4.6）。フェーズ 1（FTS のみ）の時点で grep に対する優位（横断集約・構造化フィルタ・archive 層・書式 lint）が成立し、vector・MCP は独立に積み増せる。
+導入は 4 フェーズの段階投入（§4.7）。フェーズ 1（FTS のみ）の時点で grep に対する優位（横断集約・構造化フィルタ・archive 層・書式 lint）が成立し、vector・MCP は独立に積み増せる。
 
 ---
 
@@ -148,6 +170,9 @@ records(id, project_id, gdr_id,                    -- UNIQUE(project_id, gdr_id)
         source_path, content_hash, archived, deleted,
         first_seen_at, last_changed_at)
 links(from_record, to_record, kind)                -- supersedes / superseded_by
+files(project_id, path, size, mtime, content_hash) -- 増分検知 段階 1 のファイル台帳
+sync_log(project_id, started_at, finished_at,
+         files_scanned, records_changed, status)   -- 同期履歴（鮮度の記録）
 records_fts   -- FTS5 (tokenize='trigram'): title, decision, reason, impact, revisit_condition
 records_vec   -- sqlite-vec vec0: 1 レコード 1 ベクトル
 ```
@@ -159,7 +184,9 @@ records_vec   -- sqlite-vec vec0: 1 レコード 1 ベクトル
 ### 4.3. 取り込みパイプライン
 
 ```
-対象発見 → パース → 正規化 → hash 比較 → (変更分のみ) embed → upsert → lint レポート
+対象発見 → 段階1: ファイル台帳比較 → (変更ファイルのみ) パース → 正規化
+        → 段階2: content_hash 比較 → (変更レコードのみ) embed → upsert
+        → 走査突合（消滅検知） → lint レポート
 ```
 
 | 工程 | 仕様 |
@@ -168,6 +195,7 @@ records_vec   -- sqlite-vec vec0: 1 レコード 1 ベクトル
 | 対象パス | `notes/91_gdr/**` + `notes/_archive/91_gdr/**`（archived=true）。旧慣行パスは設定で追加可能 |
 | 除外 | `_reference/`（サンプル混入を実測で確認済み）。`INDEX.md` はレコード取り込み対象外（フェーズ 4 の突合 lint では検査入力として読む） |
 | パース | `^\*\*GDR-{PREFIX}-{番号}: {要約}\*\*` + 直後の `- **status:** ...` 6 フィールド。寛容パース |
+| 増分検知 | 2 段階ハッシュ（§4.6）: `files` 台帳（path / size / mtime）で不変ファイルをスキップ → record content_hash で変更レコードのみ upsert + 再 embed |
 | lint | フィールド欠落・status 不正値・Superseded の相互リンク欠落を警告として一覧出力 |
 | 消滅検知 | ソースから消えたレコードは archive 側で再発見できれば archived=true、どこにも無ければ deleted=true（物理削除はしない・検索既定から除外） |
 
@@ -192,18 +220,39 @@ gdr-index lint                                           # 書式逸脱の横断
 ### 4.5. MCP サーバ
 
 ```
-gdr_search(query, project?, scope?, status?, k=5)  → ハイブリッド検索結果（要約形式）
+gdr_search(query, project?, scope?, status?, k=5)  → ハイブリッド検索結果（要約形式 + last_sync）
 gdr_get(project, gdr_id)                           → レコード全文 + supersede チェーン
 gdr_list_projects()                                → プロジェクト一覧と scope/PREFIX 語彙
+gdr_status()                                       → インデックス鮮度（last_sync / 未取り込み変更の有無）
 ```
 
 - 登録: `claude mcp add --scope user gdr -- uvx gdr-index mcp`（ユーザスコープ → 全プロジェクトのセッションで有効）
 - 提供形態は stdio のみ（ネットワーク待受なし）。DB へは**読み取り専用**。書き込み（sync）は CLI 経路に限定し、セッション側から DB が壊れる経路を作らない
 - 返却は「gdr_id / project / title / status / scope / 決定の先頭」の要約形式とし、全文は `gdr_get` で明示的に引く（セッション文脈の圧迫を防ぐ）
+- 鮮度は隠さない: 検索応答に `last_sync` を添え、古そうなら AI が Bash 経由で `gdr-index sync` を実行して再検索する — **read-only 原則を破らずに鮮度問題を解決する動線**（§4.6）
 
 **最終形（フェーズ 4）:** `/gdr-flow` の起票フェーズで `gdr_search` を自動実行し、新 GDR ドラフトに「過去の類似判断」セクションを添える。ここまで到達すると、検索基盤がビルドアップサイクルに組み込まれ、判断の質を上げるループが閉じる。
 
-### 4.6. 段階導入
+### 4.6. 同期モデル — 参照系としての一貫性
+
+DB は参照系（read replica 相当）であり、一貫性モデルは**結果整合 + 明示的鮮度、正しさの根拠は rebuild**（GDR-META-023）。同期はファイル → DB の一方向のみで書き戻しが存在しないため衝突解決が不要 — 同期問題は**キャッシュ無効化問題に還元**される。
+
+**トリガの層別:**
+
+| 層 | トリガ | 鮮度 | 備考 |
+|---|---|---|---|
+| 主経路 | `/gdr-docs` 完了処理後の自動 sync（ツール不在時は無音スキップ） | 節目ごと | GDR はサイクルの節目でしか変わらない（方法論が規律）ため、ここでほぼ全変更をカバー |
+| 手動 | `gdr-index sync` | 任意 | CLI 検索の前に必要なら |
+| 読み側同期 | フェーズ 4 の起票時照会は**照会直前に sync**（`/gdr-flow` 側で仕様化） | 照会時点で最新 | 強い鮮度が要る唯一の場面。同期を書き込み側でなく読み側に寄せる |
+| 保険 | 夜間 cron / launchd | 日次 | 既定オフ。sync 忘れが頻発したら有効化（GDR-META-022 再検討条件） |
+
+**鮮度の可視化:** `sync_log` に同期履歴を記録し、`gdr-index status`（stale check: mtime スキャンのみ・読むだけ・数十 ms）と MCP `gdr_status()` で「古いかもしれない」を隠さず提示する。
+
+**drift 対策:** `gdr-index verify`（全件読み直し突合・レポートのみ）で増分同期の静かなズレを検知し、検出時は `rebuild`。DB 内 `schema_version` とツール側の比較で、スキーマ / 正規化 / embedding モデル変更時は自動 full rebuild。**増分は速度の最適化であり、正しさは常に「作り直せる」ことが担保する。**
+
+**同時実行:** SQLite は WAL モード（読み書きが互いにブロックしない）、sync は `~/.gdr/lock` の flock で単一 writer、MCP サーバは read-only 接続（`mode=ro`）で原則を接続レベルで強制。
+
+### 4.7. 段階導入
 
 | フェーズ | 内容 | 出せる価値 | 目安 |
 |---|---|---|---|
@@ -247,16 +296,16 @@ gdr_list_projects()                                → プロジェクト一覧�
 | 0.1 | 本提案のレビュー → 反映 → 合意（置き場所・ツール名・GDR 帰属の 3 点を確定し、GDR 019〜022 の status を更新） | 019〜022 | — | 進行中 |
 | 0.2 | ツールリポジトリ作成 + GDR-META-020/021 の再発行（帰属方針に従う） | GDR-META-019 | 0.1 | 未着手 |
 | 1.1 | パーサ + lint 実装（除外規則・寛容パース・6 フィールド分解）。実レコードを匿名化した golden フィクスチャでテスト（複数レコード/1 ファイル・`_reference/` 混入・フィールド欠落・多行フィールド・Superseded リンクの各ケース） | GDR-META-020 | 0.2 | 未着手 |
-| 1.2 | SQLite スキーマ + 冪等 upsert（content_hash 差分検知） | GDR-META-020 | 1.1 | 未着手 |
+| 1.2 | SQLite スキーマ + 冪等 upsert（2 段階増分検知: files 台帳 + content_hash） | GDR-META-020, 023 | 1.1 | 未着手 |
 | 1.3 | FTS5(trigram) + LIKE フォールバック + search / show CLI | GDR-META-021 | 1.2 | 未着手 |
-| 1.4 | config（プロジェクト列挙）+ sync / rebuild / lint CLI | GDR-META-022 | 1.2 | 未着手 |
+| 1.4 | config（プロジェクト列挙）+ sync / rebuild / lint / status / verify CLI | GDR-META-022, 023 | 1.2 | 未着手 |
 | 2.1 | Embedder IF + ローカル実装（Ollama 等） | GDR-META-021 | 1.4 | 未着手 |
 | 2.2 | sqlite-vec 統合 + RRF ハイブリッド検索 | GDR-META-021 | 2.1 | 未着手 |
 | 2.3 | 評価セット作成（10〜20 クエリ × 期待レコード）→ embedding モデル実測比較 → 既定モデル確定 | GDR-META-021 | 2.2 | 未着手 |
-| 3.1 | MCP サーバ実装（gdr_search / gdr_get / gdr_list_projects、stdio・読み取り専用） | GDR-META-022 | 1.4 | 未着手 |
+| 3.1 | MCP サーバ実装（gdr_search / gdr_get / gdr_list_projects / gdr_status、stdio・読み取り専用） | GDR-META-022, 023 | 1.4 | 未着手 |
 | 3.2 | 05_CLAUDE_CODE_SETUP に MCP 登録手順を追記（本リポジトリ側） | GDR-META-022 | 3.1 | 未着手 |
 | 4.1 | `/gdr-docs` 完了処理へ sync 統合（ツール不在時は無音スキップのオプショナル統合） | GDR-META-022 | 1.4 | 未着手 |
-| 4.2 | `/gdr-flow` 起票フェーズへ類似判断自動照会を統合 | GDR-META-022 | 3.1 | 未着手 |
+| 4.2 | `/gdr-flow` 起票フェーズへ類似判断自動照会を統合（照会直前の sync 込み） | GDR-META-022, 023 | 3.1 | 未着手 |
 | 4.3 | 再検討条件レビューコマンド（`--field revisit_condition` の定型化） | GDR-META-020 | 1.3 | 未着手 |
 | 4.4 | INDEX 突合 lint（INDEX.md とレコード実体の整合検査） | GDR-META-020 | 1.4 | 未着手 |
 
@@ -274,9 +323,9 @@ gdr_list_projects()                                → プロジェクト一覧�
 **目的:** SQLite + FTS5(trigram) + CLI で「横断集約・構造化フィルタ・archive 層・書式 lint」を成立させる。
 
 - [ ] 1.1 パーサ + lint — `_reference/` 除外、寛容パース、フィールド分解。匿名化フィクスチャの golden test を含む
-- [ ] 1.2 スキーマ + 冪等 upsert — 複合キー、content_hash
+- [ ] 1.2 スキーマ + 冪等 upsert — 複合キー、2 段階増分検知（files 台帳 + content_hash）
 - [ ] 1.3 FTS5(trigram) + LIKE フォールバック + search / show
-- [ ] 1.4 config + sync / rebuild / lint
+- [ ] 1.4 config + sync / rebuild / lint / status / verify
 
 #### フェーズ 2: 意味検索（ハイブリッド完成）
 
@@ -290,7 +339,7 @@ gdr_list_projects()                                → プロジェクト一覧�
 
 **目的:** 全プロジェクトの Claude Code セッションから横断リコールを可能にする。
 
-- [ ] 3.1 MCP サーバ（stdio・読み取り専用）
+- [ ] 3.1 MCP サーバ（stdio・読み取り専用、gdr_status 込み）
 - [ ] 3.2 05_CLAUDE_CODE_SETUP へ登録手順追記
 
 #### フェーズ 4: ビルドアップサイクルへの統合
@@ -298,7 +347,7 @@ gdr_list_projects()                                → プロジェクト一覧�
 **目的:** 検索基盤をサイクルに組み込み、「起票時に過去の類似判断が自動で引ける」ループを閉じる。
 
 - [ ] 4.1 `/gdr-docs` 完了処理へ sync 統合（ツール不在時は無音スキップ）
-- [ ] 4.2 `/gdr-flow` 起票フェーズへ類似判断照会
+- [ ] 4.2 `/gdr-flow` 起票フェーズへ類似判断照会（照会直前 sync）
 - [ ] 4.3 再検討条件レビューの定型化
 - [ ] 4.4 INDEX 突合 lint
 
@@ -325,6 +374,7 @@ gdr_list_projects()                                → プロジェクト一覧�
 3. **フレームワークの自己進化** — 本提案は [006 二段保管](/91_demo_buildup_documents.md/kaizen/06_アーカイブ機構導入提案.md)（GDR-META-016/018）の再検討条件「横断レビュー時に過去判断を参照したい頻度が高い」に先回りで応答する提案であり、GDR の再検討条件が次の改善提案の起点になるという設計どおりの連鎖が起きている
 4. **レビュー工程での検出** — セルフレビューが (1) 公開リポジトリの文書へのプライベート情報混入（実プロジェクト名・実在するセキュリティ判断のタイトル）、(2) trigram の 3 文字制約に反する例示（技術的事実誤り）の 2 点を着手前に検出した。「文書 → レビュー → 合意 → 実装」の順序が、公開事故と実装手戻りを未然に防いだ実例
 5. **前提の是正（ユーザー指摘）** — レビュー反映中に「git リポジトリを正とする」という表現を「プロジェクト内の GDR 文書（ファイル）を正とする」に是正。ソースは個々のプロジェクトで生成された GDR 文書そのものであり、git / GitHub は前提ではない — indexer が VCS 非依存（ディレクトリ走査 + content_hash 差分検知）である設計上の事実と、文書の表現が一致した
+6. **対話による設計の深化** — 合意前のユーザーの問い「DB は参照系だが同期の取り方は」から GDR-META-023 が結晶化。書き戻し経路ゼロの設計により同期問題が**キャッシュ無効化問題に還元**されるという言語化が得られ、増分（速度の最適化）と正しさ（rebuild）の責務分離、鮮度の可視化（read-only 原則を保った解決動線）が定まった
 
 ### 7.2. 次回への申し送り
 

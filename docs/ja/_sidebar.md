@@ -22,6 +22,7 @@
   - [04. GDR 運用の課題と発展性](91_demo_buildup_documents.md/kaizen/04_GDR運用の課題と発展性.md)
   - [05. 推奨ツール導入提案](91_demo_buildup_documents.md/kaizen/05_推奨ツール導入提案.md)
   - [06. アーカイブ機構導入提案](91_demo_buildup_documents.md/kaizen/06_アーカイブ機構導入提案.md)
+  - [07. GDR 横断検索基盤導入提案](91_demo_buildup_documents.md/kaizen/07_GDR横断検索基盤導入提案.md)
 
 <div style="margin-top: 1.5em; padding-left: 15px;">
   <a href="https://github.com/sponsors/yoshinag" target="_blank" rel="noopener">

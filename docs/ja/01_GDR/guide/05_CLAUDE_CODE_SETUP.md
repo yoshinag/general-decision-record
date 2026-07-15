@@ -6,7 +6,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 
 本ガイドは [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 から呼ばれる詳細仕様。Cursor / GitHub Copilot などを使う場合は不要。
 
-## 配置するファイル（8 ファイル）
+## 配置するファイル（8 ファイル + 任意 1 ファイル）
 
 | 配置パス | 役割 |
 |---|---|
@@ -18,6 +18,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 | `~/.claude/commands/gdr-flow.md` | スラッシュコマンド `/gdr-flow <作業指示>` の定義 |
 | `~/.claude/commands/gdr-archive.md` | スラッシュコマンド `/gdr-archive <パス>` の定義 |
 | `~/.claude/commands/gdr-docs.md` | スラッシュコマンド `/gdr-docs` の定義（**実装後の文書整理**、引数なし専用） |
+| `~/.claude/commands/gdr-map.md` | **（任意）** スラッシュコマンド `/gdr-map [<対象>]` の定義（**可視化** — [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) 準拠。既定 6 キーワード体系の外） |
 
 ## `~/.claude/CLAUDE.md` の仕様
 
@@ -55,6 +56,7 @@ argument-hint: <引数の形式>
 | `gdr-flow.md` | 進行状況を確認し GDR ビルドアップサイクルをノンストップで前進（引数有無で 2 モード） | `[<作業指示 or トピック>]` | **引数あり:** 指定作業の現在地（会話文脈 / `git log` / `notes/` ファイル状態）を判定し**次フェーズだけ**実行（巻き戻し禁止）。**引数なし:** **セッション全体を概観**し進行中の作業を自動特定（直近会話 / `git log -10` / 未コミット差分 / 最近変更された `notes/` 配下）、作業の核を 1 文で言語化してから現在地判定 → 完走。曖昧時は AskUserQuestion で確認。フェーズ: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理 |
 | `gdr-archive.md` | 対象ファイル / ディレクトリを `notes/_archive/` 配下へ退避（AI デフォルト除外領域） | `<ファイル or ディレクトリのパス>` | `git mv` で `notes/_archive/{元のパス}` に退避し 1 コミット。同名既存ファイル時はエラー終了。ディレクトリ指定時はディレクトリごと退避。物理削除はユーザー手動 (`rm`) |
 | `gdr-docs.md` | **実装後の文書整理**（GDR status 更新 / ふりかえり追記 / INDEX 更新 / spec 最終化）。整理対象がなければ無音 | （引数なし） | `git log -10 --name-only` で実装系コミットを特定 → 関連文書（GDR / 改善提案 / `INDEX` / `spec`）を整合状態に更新 → 整理単位ごとに別コミット。`/gdr-flow` のフェーズ 7「完了処理」を独立コマンド化したショートカット。**該当なしなら無音で終了** |
+| `gdr-map.md`（任意） | GDR の蓄積を Mermaid で可視化（関係ビュー = 型付き有向グラフ / 構造ビュー = mindmap）。既定はセッション内提示のみ | `[<scope / PREFIX / GDR-ID / ファイルパス>] [構造] [保存]` | **引数あり:** 指定対象（scope / PREFIX / GDR-ID の近傍 / 文書内）に絞ったビューを生成。**引数なし:** `notes/91_gdr/` を走査して全景の関係ビューを生成、破綻しそうな規模なら AskUserQuestion で絞り込みを提案。「保存」指定時のみ `notes/91_gdr/map/` に生成物ヘッダ付きで保存（図はキャッシュ、正は GDR 文書）。詳細は [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) |
 
 > **キーワードとスラッシュコマンドの住み分け:** 短縮キーワード（`改善提案：` 等）は自然文中の流れで使う。スラッシュコマンド（`/gdr-kaizen` 等）は Tab 補完で発見性が必要な場面で使う。両方とも生きている。
 
@@ -75,6 +77,7 @@ argument-hint: <引数の形式>
 | `/gdr-flow` | 指定作業の現在地を判定して次フェーズだけ実行 | セッション全体を概観し進行中の作業を自動特定 → 作業の核を 1 文で言語化 → 現在地判定 → 完走 |
 | `/gdr-review` | 指定ファイルをセルフレビュー | 直近会話言及 / `git status` modified / `git log --name-only -3` から対象を自動特定。複数候補なら AskUserQuestion |
 | `/gdr-apply-review` | 指定 `_reviewed.md` を本体に統合 | `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion |
+| `/gdr-map`（任意） | 指定対象（scope / PREFIX / GDR-ID の近傍 / 文書内）に絞ったビューを生成 | `notes/91_gdr/` 走査で全景の関係ビューを生成。破綻しそうな規模なら AskUserQuestion で絞り込みを提案 |
 
 ### 2 モード対応の書き方
 
@@ -94,7 +97,7 @@ argument-hint: <引数の形式>
 
 現状の運用:
 
-- **2 モード対応:** `/gdr-bug-report` `/gdr-flow` `/gdr-review` `/gdr-apply-review` の 4 コマンド
+- **2 モード対応:** `/gdr-bug-report` `/gdr-flow` `/gdr-review` `/gdr-apply-review` の 4 コマンド（+ 任意導入の `/gdr-map`）
 - **1 モード（引数あり前提）:** `/gdr-kaizen` `/gdr-archive` の 2 コマンド
 - **1 モード（引数なし専用）:** `/gdr-docs` の 1 コマンド（**「該当時のみ動作、無ければ無音」が前提のため引数を取らない**）
 

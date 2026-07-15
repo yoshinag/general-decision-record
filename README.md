@@ -15,6 +15,8 @@
 | G-02 | [PREFIX ガイド](docs/ja/01_GDR/guide/02_PREFIX_GUIDE.md) | PREFIX ガイドライン（共通 + 業種別） |
 | G-03 | [ローカライズ初回プロンプト](docs/ja/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md) | 導入時の最初のプロンプト設計 |
 | G-04 | [プロンプトガイド](docs/ja/01_GDR/guide/04_PROMPT_GUIDE.md) | 推奨プロンプト集・短縮キーワード |
+| G-05 | [Claude Code セットアップ](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) | user-level config / スラッシュコマンド |
+| G-06 | [可視化ガイド](docs/ja/01_GDR/guide/06_VISUALIZATION_GUIDE.md) | 構造ビュー / 関係ビュー（Mermaid）・`/gdr-map` |
 | T0 | [最初の GDR サンプル](docs/ja/01_GDR/templates/T0_FIRST_GDR_SAMPLE.md) | 最初の GDR（`GDR-META-001`）の記述例 |
 | T1 | [前提定義書テンプレート](docs/ja/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
 | T2 | [ビルドアップ記録テンプレート](docs/ja/01_GDR/templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録・改善提案テンプレート |
@@ -43,7 +45,9 @@ docs/                                      # Docsify サイト（GitHub Pages �
 │   │   │   ├── 01_SCOPE_GUIDE.md
 │   │   │   ├── 02_PREFIX_GUIDE.md
 │   │   │   ├── 03_FIRST_PROMPT_GUIDE.md
-│   │   │   └── 04_PROMPT_GUIDE.md
+│   │   │   ├── 04_PROMPT_GUIDE.md
+│   │   │   ├── 05_CLAUDE_CODE_SETUP.md
+│   │   │   └── 06_VISUALIZATION_GUIDE.md   # 可視化ガイドライン
 │   │   └── templates/                     # テンプレート
 │   │       ├── T0_FIRST_GDR_SAMPLE.md     # 最初の GDR サンプル
 │   │       ├── T1_CONTEXT_DEFINITIONS.md  # 前提定義書

@@ -41,6 +41,28 @@ ADR と同一:
 
 **二段保管の推奨:** Superseded 化した GDR は、`GDR_INDEX` に「GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived」の 1 行サマリを残したうえで、本文ファイルを `notes/_archive/91_gdr/gdr/` へ退避する運用を推奨する。AI は INDEX の 1 行で置換関係と再検討条件を把握でき、詳細議論本文は読まずに済むため、トークン消費が抑えられる。詳細は [02. AI-Driven GDR ビルドアップ §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) を参照。
 
+### 3.1. 任意フィールド
+
+可視化（[06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md)）と DB 化（横断検索基盤への取り込み）を見据え、6 フィールドの**後**に以下の任意フィールドを追加できる（経緯: [008 提案](/91_demo_buildup_documents.md/kaizen/08_GDR可視化対応提案.md) GDR-META-025）:
+
+```markdown
+- **日時:** 2026-07-15T14:30:00+09:00
+- **関連:** depends-on GDR-INFRA-002, derived-from §2-1
+```
+
+| フィールド | 形式 | 意味 |
+|---|---|---|
+| `日時` | ISO 8601 日付時刻・**タイムゾーンオフセット付き**（`YYYY-MM-DDTHH:MM:SS+09:00`）。時刻が不明な過去の判断は日付のみ（`YYYY-MM-DD`）も許容し、解釈は取り込み側で正規化する | 決定日時。同日に複数の判断が積み上がっても前後関係を保持する。status 遷移日時は追わない |
+| `関連` | `{型} {対象}` のカンマ区切り。型は `depends-on`（前提依存）/ `refines`（親決定の細分化）/ `relates-to`（弱い関連）/ `derived-from`(由来) の**閉集合**、対象は GDR ID または文書内の `§{章}-{番号}` 参照 | GDR 間・課題間の型付きリンク。supersede 系は従来どおり status 行に記載する（関連には書かない） |
+
+- 任意フィールドの**欠落は書式違反ではない**（lint 等で警告しない）。記録する価値がある場合にのみ書く
+- 型の語彙の追加・改廃は GDR-META で行う
+
+**あわせて定義する規約:**
+
+- **主 scope:** `scope` の**先頭記載を主 scope** とみなす（可視化等で代表 scope が 1 つ必要な場面の規約。複数 scope の意味は従来どおり）
+- **代替案の正式記法:** 理由フィールド配下のサブ箇条書き `- **代替案[ {ラベル}]:** {概要} → {評価}`。ラベル（A, B, ...）は複数案あるときのみ必須（1 件なら省略可）、却下した場合は末尾に「。却下」、部分採用・保留はその旨を記す
+
 ## 4. scope と PREFIX
 
 GDR の書式（3 章）に登場する 2 つの分類軸を定義する。
@@ -76,6 +98,7 @@ PREFIX と scope は同名になることがある（例: `GDR-UI-001` の `scop
 | G-03 | [03_FIRST_PROMPT_GUIDE.md](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md) | ローカライズ初回プロンプトガイド |
 | G-04 | [04_PROMPT_GUIDE.md](/01_GDR/guide/04_PROMPT_GUIDE.md) | プロンプトガイドライン（推奨プロンプト集） |
 | G-05 | [05_CLAUDE_CODE_SETUP.md](/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) | Claude Code セットアップ仕様（user-level config / スラッシュコマンド） |
+| G-06 | [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) | 可視化ガイド（構造ビュー / 関係ビュー / `/gdr-map`） |
 | T0 | [T0_FIRST_GDR_SAMPLE.md](/01_GDR/templates/T0_FIRST_GDR_SAMPLE.md) | 最初の GDR（`GDR-META-001`）の記述例 |
 | T1 | [T1_CONTEXT_DEFINITIONS.md](/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) | Context Definitions テンプレート |
 | T2 | [T2_BUILDUP_RECORD.md](/01_GDR/templates/T2_BUILDUP_RECORD.md) | ビルドアップ記録テンプレート |

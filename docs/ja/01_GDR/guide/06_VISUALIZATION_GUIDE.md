@@ -24,7 +24,7 @@ GDR の蓄積をマインドマップ / グラフとして表現するための�
 
 scope（または PREFIX）を第一階層とする分類ツリー。**横断関係はこのビューでは描かない。**
 
-- status は記号で表現する: **✅ Implemented / 🔷 Proposed / ⬛ Superseded**（Mermaid mindmap はノード単位の色指定が弱いため）
+- status は記号で表現する: **✅ Implemented / ☑️ Accepted / 🔷 Proposed / ⬛ Superseded / ✖️ Rejected**（Mermaid mindmap はノード単位の色指定が弱いため）。失効（Superseded / Rejected）は既定では描かず、指定時のみ含める
 - 複数 scope のレコードは**主 scope**（先頭記載）の枝に置き、末尾に `(+pol)` のように併記する
 
 ```mermaid
@@ -35,6 +35,7 @@ mindmap
       🔷 GDR-INFRA-003 Redis 統一 (+perf)
     ui
       ✅ GDR-UI-002 デザイントークン
+      ☑️ GDR-UI-005 ダークモード対応
       ⬛ GDR-UI-001 手書き CSS
     meta
       ✅ GDR-META-001 GDR 導入
@@ -48,21 +49,27 @@ mindmap
 flowchart LR
   classDef implemented fill:#2e7d32,color:#fff
   classDef proposed    fill:#1565c0,color:#fff
+  classDef accepted    fill:#00838f,color:#fff
   classDef superseded  fill:#616161,color:#fff
+  classDef rejected    fill:#9e9e9e,color:#fff,stroke:#c62828,stroke-dasharray:4
 
   K21["§2-1 課題: セッション不整合"]
   A["GDR-INFRA-001<br>構成管理"]:::implemented
   B["GDR-INFRA-003<br>Redis 統一"]:::proposed
   C["GDR-UI-001<br>手書き CSS"]:::superseded
   D["GDR-UI-002<br>デザイントークン"]:::implemented
+  E["GDR-UI-004<br>モーダル統合"]:::rejected
+  F["GDR-UI-009<br>設定画面の再設計"]:::accepted
 
   B -- depends-on --> A
   B -- derived-from --> K21
   D -- supersedes --> C
+  F -- derived-from --> E
 ```
 
 - supersede の向きは**新 → 旧**（`Supersedes` の語順どおり）
 - 課題ノード（`§N-M`）は `derived-from` の参照先として必要なときだけ描く
+- status の意味・遷移は [GDR 仕様 §3](/01_GDR/01_GENERAL_DECISION_RECORD.md#3-書式) を参照。却下した案の再提案は `supersedes` ではなく `derived-from` で描く
 
 ## 5. 生成手順
 

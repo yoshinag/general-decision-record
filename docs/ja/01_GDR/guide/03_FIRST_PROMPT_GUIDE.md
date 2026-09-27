@@ -13,8 +13,9 @@ GDR フレームワーク自体は scope や PREFIX の具体的な定義に依�
 - プロジェクトで使う **PREFIX**（ドメイン識別子）
 - GDR の **出力先**（ディレクトリ構成）
 - **短縮キーワード** などの運用設定
+- 準拠する **GDR 仕様の版**（導入時点の最新版。[CHANGELOG](https://github.com/yoshinag/general-decision-record/blob/main/CHANGELOG.md) を参照）
 
-これらの決定自体が最初の GDR（例: `GDR-META-001`）になる。
+これらの決定自体が最初の GDR（例: `GDR-META-001`）になる。採用した版は前提定義書の `GDR 仕様` 行に宣言し、GDR-META-001 の決定にも含める。
 
 ## 2. 推奨プロンプト
 
@@ -26,6 +27,7 @@ GDRを導入する。以下のプロジェクト情報をもとに前提定義�
 概要: {プロジェクトの概要を1〜3文で}
 主な関心事: {例: API設計、画面UI、運用ルール、コスト管理 など}
 GDR出力先: notes/{01_spec,05_knowledge,10_things,20_kaizen,80_bug_fix_report,91_gdr,99_other}/
+GDR仕様の版: {vX.Y}（上流の最新タグ。_reference/ はこの版で取得する）
 
 短縮キーワード:
   "改善提案[：|；][タイトル]": notes/20_kaizen/ 配下に T2 テンプレートの構成に従って改善提案文書を生成
@@ -42,6 +44,7 @@ GDR出力先: notes/{01_spec,05_knowledge,10_things,20_kaizen,80_bug_fix_report,
 - [T1_CONTEXT_DEFINITIONS.md](/01_GDR/templates/T1_CONTEXT_DEFINITIONS.md) テンプレートに基づいた前提定義書を生成する
 - [scope ガイド](/01_GDR/guide/01_SCOPE_GUIDE.md) / [PREFIX ガイド](/01_GDR/guide/02_PREFIX_GUIDE.md) を参照してプロジェクトに適した scope・PREFIX を提案する
 - 出力先ディレクトリの構成を提案する
+- 前提定義書の `GDR 仕様` 行に採用版と上流コミット・取得日を記入し、GDR-META-001 の決定に採用版を含める
 - CLAUDE.md の `コンテキスト短縮用キーワード` セクションを生成する
 
 ### 2.1. GDR 出力先の書式

@@ -6,6 +6,9 @@
 
 プロジェクト: {プロジェクト名}
 ドメイン: {ソフトウェア / 製造 / 医療 / 金融 / その他}
+GDR 仕様: {vX.Y}（上流 {commit 短縮ハッシュ} / 取得 {YYYY-MM-DD}）
+
+> **GDR 仕様** の行は、このプロジェクトが準拠する GDR 仕様の版の唯一の宣言。AI はこの版の規則で GDR を解釈する（宣言がなければ v1.0 扱い）。版の変更はこの行を直接編集せず、GDR-META を発行してから更新する。MAJOR 版の採用では、必須の移行項目を完了してから更新する（[CHANGELOG](https://github.com/yoshinag/general-decision-record/blob/main/CHANGELOG.md) / `/gdr-upgrade`）
 
 ## 2. scope 定義
 

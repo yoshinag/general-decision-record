@@ -18,7 +18,7 @@ ADR と同一:
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** {Proposed | Implemented | Superseded}
+- **status:** {Proposed | Accepted | Implemented | Superseded | Rejected}
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -29,17 +29,49 @@ ADR と同一:
 - `{PREFIX}` はドメインを示す短い識別子
 - `{番号}` は PREFIX 内の連番（3 桁ゼロ埋め: 001, 002, ...）
 - `scope` は 1 つ以上。複数の場合はカンマ区切り（例: `arch, pol`）
-- `status` は以下の 3 値:
+- `status` は以下の 5 値。**有効**（現行の判断として扱う）と**失効**（判断の根拠にしない）の 2 区分を持つ（経緯: [009 提案](/91_demo_buildup_documents.md/kaizen/09_GDR信頼性強化提案.md) GDR-META-028）:
 
-| status | 意味 |
+| status | 区分 | 意味 |
+|---|---|---|
+| `Proposed` | 有効（未確定） | 提案中。合意に至っていない |
+| `Accepted` | 有効 | 合意済み・未実装 |
+| `Implemented` | 有効 | 実装済み。コード・設定・運用（文書化された方針等）に反映された |
+| `Superseded` | 失効 | 新しい GDR に置き換えられた |
+| `Rejected` | 失効 | 起票された提案そのものが採用されなかった（合意後の撤回を含む） |
+
+**遷移:**
+
+| 遷移 | 契機 |
 |---|---|
-| `Proposed` | 提案中。レビュー・実装に着手していない |
-| `Implemented` | 実装済み。コードや設定に反映された |
-| `Superseded` | 代替済み。新しい GDR に置き換えられた |
+| `Proposed → Accepted` | 合意 |
+| `Accepted → Implemented` | 実装・反映 |
+| `Proposed → Rejected` | 不採用 |
+| `Accepted → Rejected` | 合意後の撤回（実装段階で前提が崩れた等。却下理由にその旨を書く） |
+| `Accepted / Implemented → Superseded` | 新しい GDR による置換 |
 
-`Superseded` にする場合は、代替先の GDR ID を記載し、代替先からも元の GDR へリンクを貼ること（例: `Superseded by GDR-UI-003` / `Supersedes GDR-UI-001`）
+- `Accepted` への更新は合意の時点で行う
+- `Rejected` と `Superseded` は終端状態（例外は後述の「撤回時の復帰」のみ）
+- 「X はしない」こと自体を方針として拘束したい場合は、否定形の決定を持つ GDR を起票する（`Rejected` ではない）
+- `Rejected` には理由配下にサブ箇条書き `- **却下理由:** ...` を必須とする。却下した案を再提案する場合は新 GDR を起票し、任意フィールド「関連」で `derived-from GDR-X-NNN` とつなぐ（`supersedes` は使わない）
 
-**二段保管の推奨:** Superseded 化した GDR は、`GDR_INDEX` に「GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived」の 1 行サマリを残したうえで、本文ファイルを `notes/_archive/91_gdr/gdr/` へ退避する運用を推奨する。AI は INDEX の 1 行で置換関係と再検討条件を把握でき、詳細議論本文は読まずに済むため、トークン消費が抑えられる。詳細は [02. AI-Driven GDR ビルドアップ §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) を参照。
+**置換（supersede）の記法と切替時点:** 相互リンクは status 行に書く。status 行は「先頭トークンが status 値、以降の `by` 句・括弧が置換リンク」と読む:
+
+```markdown
+- **status:** Superseded by GDR-UI-003          ← 旧
+- **status:** Accepted (supersedes GDR-UI-001)   ← 新（実装後は Implemented (supersedes GDR-UI-001)）
+```
+
+- 旧を `Superseded` にするのは**新が `Accepted` になった時点**。新が `Proposed` の間は旧を有効のまま残す
+- **撤回時の復帰:** 置換予定だった新が `Accepted → Rejected` で撤回された場合、旧の status を置換前の値に戻し注記する（例: `Implemented（GDR-UI-003 の撤回により復帰）`）。判断内容は変わらないため軽微な訂正として扱う
+
+**二段保管の推奨:** 失効した GDR は、`GDR_INDEX` に 1 行サマリを残したうえで本文ファイルを `notes/_archive/91_gdr/gdr/` へ退避する運用を推奨する。AI は INDEX の 1 行で置換関係と再検討条件を把握でき、詳細議論本文は読まずに済むため、トークン消費が抑えられる。
+
+| status | 退避のタイミング | INDEX の 1 行サマリ |
+|---|---|---|
+| `Superseded` | 新が `Implemented` になった時点（`Accepted` の間は元の位置に置く — 実装はまだ旧に従っており、撤回時の復帰も status 行の訂正で済む） | `GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived` |
+| `Rejected` | 確定時点 | `GDR-X-NNN（要約） — Rejected（却下理由の要約） → archived` |
+
+詳細は [02. AI-Driven GDR ビルドアップ §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) を参照。
 
 ### 3.1. 任意フィールド
 
@@ -48,15 +80,24 @@ ADR と同一:
 ```markdown
 - **日時:** 2026-07-15T14:30:00+09:00
 - **関連:** depends-on GDR-INFRA-002, derived-from §2-1
+- **理由の出所:** human（ユーザー発言「障害時にセッションが全部飛ぶのは許容できない」）
 ```
 
 | フィールド | 形式 | 意味 |
 |---|---|---|
 | `日時` | ISO 8601 日付時刻・**タイムゾーンオフセット付き**（`YYYY-MM-DDTHH:MM:SS+09:00`）。時刻が不明な過去の判断は日付のみ（`YYYY-MM-DD`）も許容し、解釈は取り込み側で正規化する | 決定日時。同日に複数の判断が積み上がっても前後関係を保持する。status 遷移日時は追わない |
 | `関連` | `{型} {対象}` のカンマ区切り。型は `depends-on`（前提依存）/ `refines`（親決定の細分化）/ `relates-to`（弱い関連）/ `derived-from`(由来) の**閉集合**、対象は GDR ID または文書内の `§{章}-{番号}` 参照 | GDR 間・課題間の型付きリンク。supersede 系は従来どおり status 行に記載する（関連には書かない） |
+| `理由の出所` | `human` / `ai-reviewed` / `ai` の**閉集合**（信頼度の順序 `human > ai-reviewed > ai`）。先頭トークンが値、以降の括弧内は注記（全角・半角どちらも可）。`human` では発言の短い引用または出典の注記が必須 | 理由の核心がどこから来たか。`human` = 人間の発言・文書に由来（AI は整形のみ）/ `ai-reviewed` = AI が起案し人間がレビュー・合意で確認 / `ai` = AI の推論のみで人間未確認（経緯: [009 提案](/91_demo_buildup_documents.md/kaizen/09_GDR信頼性強化提案.md) GDR-META-030） |
 
 - 任意フィールドの**欠落は書式違反ではない**（lint 等で警告しない）。記録する価値がある場合にのみ書く
 - 型の語彙の追加・改廃は GDR-META で行う
+
+**理由の出所の規則:**
+
+- **AI が GDR を起票・更新する場合は記入必須**（任意フィールドの例外）。欠落は「不明」とみなし、信頼度判断では `ai` と同等に扱う
+- 出所が混在する場合は、理由を構成する部分のうち**最も弱い値**を書き、人間由来の部分は注記の引用で示す。レビュー・合意を経た時点で `ai` の部分は `ai-reviewed` に上がる（`Proposed → Accepted` と同時に更新。軽微な追記扱い）
+- `human` の引用は要約・言い換えではなく**発言の断片そのもの**（1 文程度）。個人名は役割（「ユーザー」「レビュアー」）に置き換える
+- **AI は理由が不明な判断に理由を補完しない。** 根拠が確認できない場合は理由欄に「不明（記録時点で根拠未確認）」と書き、出所は `ai` とする
 
 **あわせて定義する規約:**
 

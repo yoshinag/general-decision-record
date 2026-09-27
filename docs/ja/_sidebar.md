@@ -25,6 +25,7 @@
   - [06. アーカイブ機構導入提案](91_demo_buildup_documents.md/kaizen/06_アーカイブ機構導入提案.md)
   - [07. GDR 横断検索基盤導入提案](91_demo_buildup_documents.md/kaizen/07_GDR横断検索基盤導入提案.md)
   - [08. GDR 可視化対応提案](91_demo_buildup_documents.md/kaizen/08_GDR可視化対応提案.md)
+  - [09. GDR 信頼性強化提案](91_demo_buildup_documents.md/kaizen/09_GDR信頼性強化提案.md)
 
 <div style="margin-top: 1.5em; padding-left: 15px;">
   <a href="https://github.com/sponsors/yoshinag" target="_blank" rel="noopener">

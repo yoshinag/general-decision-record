@@ -200,13 +200,15 @@ CLAUDE.md は AI が「読むべき指示」であり、誤動作の保証はな
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** Proposed | Implemented | Superseded
+- **status:** Proposed | Accepted | Implemented | Superseded | Rejected
 - **scope:** {scope をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
 - **影響:** この決定がもたらす具体的な影響
 - **再検討条件:** どのような状況変化があれば判断を見直すか
 ```
+
+- status の意味・遷移、任意フィールド（日時 / 関連 / 理由の出所）は [GDR 仕様 §3](/01_GDR/01_GENERAL_DECISION_RECORD.md#3-書式) を参照
 
 ## 参考文書
 

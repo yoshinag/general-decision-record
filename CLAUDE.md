@@ -37,7 +37,7 @@ GDR レコードは以下の 6 フィールドを**すべて**含めること:
 ```markdown
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** {Proposed | Implemented | Superseded}
+- **status:** {Proposed | Accepted | Implemented | Superseded | Rejected}
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -45,7 +45,9 @@ GDR レコードは以下の 6 フィールドを**すべて**含めること:
 - **再検討条件:** どのような状況変化があれば判断を見直すか
 ```
 
-- `Superseded` にする場合は代替先 GDR ID を記載し、相互リンクすること
+- `Superseded` にする場合は代替先 GDR ID を記載し、相互リンクすること（旧: `Superseded by GDR-X`、新: `Accepted (supersedes GDR-Y)`）。旧の失効は新が `Accepted` になった時点
+- `Rejected` にする場合は理由配下に `- **却下理由:**` を必須とする
+- AI が起票・更新する GDR には任意フィールド `- **理由の出所:** {human | ai-reviewed | ai}` を必ず付ける（詳細: `docs/ja/01_GDR/01_GENERAL_DECISION_RECORD.md` §3.1）
 
 ## 採番ルール
 

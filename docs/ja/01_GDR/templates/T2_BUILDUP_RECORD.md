@@ -22,7 +22,7 @@
 
 | GDR ID | 決定の要約 | status |
 |---|---|---|
-| GDR-{PREFIX}-{番号} | {一行要約} | {Proposed / Implemented / ...} |
+| GDR-{PREFIX}-{番号} | {一行要約} | {Proposed / Accepted / Implemented / ...} |
 
 ---
 
@@ -32,7 +32,7 @@
 
 **GDR-{PREFIX}-{番号}: {決定の要約}**
 
-- **status:** {Proposed | Implemented | Superseded}
+- **status:** {Proposed | Accepted | Implemented | Superseded by GDR-X | Rejected}（置換する側は `Accepted (supersedes GDR-X)` のように括弧で併記）
 - **scope:** {scope の略記をカンマ区切り}
 - **決定:** 何をするか（または何をしないか）
 - **理由:** なぜその判断に至ったか（代替案との比較、トレードオフ）
@@ -41,6 +41,7 @@
 - **再検討条件:** どのような状況変化があれば判断を見直すか
 - **日時:** {YYYY-MM-DDTHH:MM:SS+09:00}（任意 — ISO 8601 日付時刻、オフセット付き）
 - **関連:** {型 対象, ...}（任意 — 型は depends-on / refines / relates-to / derived-from。[01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) 参照）
+- **理由の出所:** {human（発言の短い引用） | ai-reviewed | ai}（任意 — AI 起票時は必須。混在時は最も弱い値。[01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) 参照）
 
 
 ---

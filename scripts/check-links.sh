@@ -1,6 +1,14 @@
 #!/bin/bash
 # markdown 内のローカルリンクを検証する（GNU/BSD 両対応、コードブロック除外）
+#
+# リンクの解決規則:
+#   - `/` で始まるリンク → Docsify のルート（docs/ja/）からの絶対パス
+#   - それ以外             → リンク元ファイルのディレクトリからの相対パス
+#   - `#` 以降（アンカー）は無視、http(s):// と mailto: は対象外
 set -euo pipefail
+
+DOCSIFY_ROOT="docs/ja"
+status=0
 
 check_file() {
   local file="$1"
@@ -15,25 +23,34 @@ check_file() {
     esac
     [ "$in_code" -eq 1 ] && continue
 
-    # インラインコード（`...`）を除去してからリンクを抽出
+    # インラインコード（`...`）を除去してから、1 行内のすべてのリンクを抽出
     local cleaned
-    cleaned=$(echo "$line" | sed 's/`[^`]*`//g')
-    echo "$cleaned" | sed -n 's/.*\[.*\](\([^)#]*\)).*/\1/p' | while read -r link; do
+    cleaned=$(printf '%s\n' "$line" | sed 's/`[^`]*`//g')
+    while read -r link; do
       [ -z "$link" ] && continue
-      case "$link" in http://*|https://*) continue ;; esac
+      link="${link%%#*}"
+      [ -z "$link" ] && continue
+      case "$link" in http://*|https://*|mailto:*) continue ;; esac
 
-      local target="$dir/$link"
-      if [ ! -f "$target" ]; then
+      local target
+      case "$link" in
+        /*) target="$DOCSIFY_ROOT$link" ;;
+        *)  target="$dir/$link" ;;
+      esac
+      if [ ! -e "$target" ]; then
         echo "BROKEN: $file -> $link"
+        status=1
       fi
-    done
+    done < <(printf '%s\n' "$cleaned" | grep -oE '\]\([^)]+\)' | sed -E 's/^\]\((.*)\)$/\1/' || true)
   done < "$file"
 }
 
-# 対象ファイルを検証
-find documents -type f -name '*.md' -print0 | while IFS= read -r -d '' file; do
+# 対象ファイルを検証（Docsify サイト + リポジトリ直下の主要文書）
+while IFS= read -r -d '' file; do
   check_file "$file"
-done
-for file in README.md CLAUDE.md; do
+done < <(find docs -type f -name '*.md' -print0)
+for file in README.md CLAUDE.md CHANGELOG.md; do
   [ -f "$file" ] && check_file "$file"
 done
+
+exit "$status"

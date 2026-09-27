@@ -24,7 +24,7 @@ GDR の蓄積をマインドマップ / グラフとして表現するための�
 
 scope（または PREFIX）を第一階層とする分類ツリー。**横断関係はこのビューでは描かない。**
 
-- status は記号で表現する: **✅ Implemented / ☑️ Accepted / 🔷 Proposed / ⬛ Superseded / ✖️ Rejected**（Mermaid mindmap はノード単位の色指定が弱いため）。失効（Superseded / Rejected）は既定では描かず、指定時のみ含める
+- status は記号で表現する: **✅ Implemented / ☑️ Accepted / 🔷 Proposed / ⬛ Superseded / ✖️ Rejected**（Mermaid mindmap はノード単位の色指定が弱いため）
 - 複数 scope のレコードは**主 scope**（先頭記載）の枝に置き、末尾に `(+pol)` のように併記する
 
 ```mermaid

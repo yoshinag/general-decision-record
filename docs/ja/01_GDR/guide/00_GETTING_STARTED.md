@@ -62,6 +62,7 @@ user-level の global config を配置して。
 - ~/.claude/commands/gdr-flow.md
 - ~/.claude/commands/gdr-archive.md
 - ~/.claude/commands/gdr-docs.md
+- ~/.claude/commands/gdr-upgrade.md
 
 要件:
 - 各ファイルは 05_CLAUDE_CODE_SETUP.md の仕様（frontmatter / 動作 /

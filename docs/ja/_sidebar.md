@@ -28,6 +28,7 @@
   - [09. GDR 信頼性強化提案](91_demo_buildup_documents.md/kaizen/09_GDR信頼性強化提案.md)
   - [10. GDR 仕様の版管理と最新版通知提案](91_demo_buildup_documents.md/kaizen/10_GDR仕様の版管理と最新版通知提案.md)
   - [11. 環境依存パスの論理参照化提案](91_demo_buildup_documents.md/kaizen/11_環境依存パスの論理参照化提案.md)
+  - [12. AIへの野心度を上げる指針の導入提案](91_demo_buildup_documents.md/kaizen/12_AIへの野心度を上げる指針の導入提案.md)
 
 <div style="margin-top: 1.5em; padding-left: 15px;">
   <a href="https://github.com/sponsors/yoshinag" target="_blank" rel="noopener">

@@ -63,7 +63,7 @@ ADR と同一:
 
 - 旧を `Superseded` にするのは**新が `Accepted` になった時点**。新が `Proposed` の間は旧を有効のまま残す
 - **撤回時の復帰:** 置換予定だった新が `Accepted → Rejected` で撤回された場合、旧の status を置換前の値に戻し注記する（例: `Implemented（GDR-UI-003 の撤回により復帰）`）。判断内容は変わらないため軽微な訂正として扱う
-- **波及チェック:** 置換・合意後の撤回で失効する GDR を「関連」の `depends-on` / `refines` で前提にしている有効な GDR は、置換の起票時に列挙し、合意時に人間が判定し、新が `Implemented` になった時点で「関連」を付け替える。旧を `depends-on` / `refines` で指す有効な GDR が残っている間は、旧を退避しない。手順は [02 §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization)（経緯: [013 提案](/91_demo_buildup_documents.md/kaizen/13_GDR置換時の波及チェック提案.md) GDR-META-038）
+- **波及チェック:** 置換・合意後の撤回で失効する GDR を「関連」の `depends-on` / `refines` で前提にしている有効な GDR は、置換の起票時に列挙し、合意時に人間が判定し、新が `Implemented` になった時点で「関連」を付け替える（合意後の撤回では、撤回を諮る時点で列挙し、`Rejected` の確定時に判定し、退避の前に付け替える）。旧を `depends-on` / `refines` で指す有効な GDR が残っている間は、旧を退避しない。手順は [02 §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization)（経緯: [013 提案](/91_demo_buildup_documents.md/kaizen/13_GDR置換時の波及チェック提案.md) GDR-META-038）
 
 **二段保管の推奨:** 失効した GDR は、`GDR_INDEX` に 1 行サマリを残したうえで本文ファイルを `notes/_archive/91_gdr/gdr/` へ退避する運用を推奨する。AI は INDEX の 1 行で置換関係と再検討条件を把握でき、詳細議論本文は読まずに済むため、トークン消費が抑えられる。
 
@@ -71,6 +71,8 @@ ADR と同一:
 |---|---|---|
 | `Superseded` | 新が `Implemented` になった時点（`Accepted` の間は元の位置に置く — 実装はまだ旧に従っており、撤回時の復帰も status 行の訂正で済む） | `GDR-OLD-NNN（要約） — Superseded by GDR-NEW-MMM → archived` |
 | `Rejected` | 確定時点 | `GDR-X-NNN（要約） — Rejected（却下理由の要約） → archived` |
+
+いずれの退避も、退避する GDR を「関連」の `depends-on` / `refines` で指す有効な GDR が残っていないこと（波及チェックの不変条件）を満たしてから行う。
 
 詳細は [02. AI-Driven GDR ビルドアップ §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) を参照。
 

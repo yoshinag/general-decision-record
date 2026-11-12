@@ -8,6 +8,22 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.4 — 2026-11-12
+
+- **互換性:** MINOR（図の追加と、`_reference/` に図を取り込む手順の追加のみ。規則・書式・解釈は変わらない）
+- **要約:**
+  - 仕様を読む助けとして SVG の図 4 枚を追加（`docs/ja/01_GDR/assets/`。ライト / ダークの配色に追従）
+    - [01 §3](docs/ja/01_GDR/01_GENERAL_DECISION_RECORD.md): status と遷移（有効 / 失効、撤回時の復帰、二段保管の退避時点）
+    - [02 §4](docs/ja/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md): ビルドアップのサイクルと PDCA（Plan = 起票〜合意、Do = GDR 起票と実装、Check = 実装と再検討条件による検証、Act = 置換・撤回・退避）。ASCII のサイクル図はテキスト版として残す
+    - 02 §5.2: 置換のときの新 GDR・旧 GDR・波及先の 3 本の時間軸と波及チェック
+    - 02 §6: 参照の規律（前向きにたどる・逆向きに見直す）
+  - `_reference/` の取得対象に `assets/*.svg` を追加（[05 セットアップガイド](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: `_reference/01_GENERAL_DECISION_RECORD.md` / `_reference/02_AI_DRIVEN_GDR_BUILDUP.md` を v2.4 で取り直し、あわせて `_reference/assets/*.svg` を取得する（取り直さないと、新しい 01 / 02 の図のリンクが切れる）
+  - 任意: なし
+- **user-level config:** 更新必要 — `CLAUDE.md`（初回導入の取得リストに `assets/*.svg`・現行版 v2.4）、`commands/gdr-upgrade.md`（取り直しで図も取得）
+
 ## v2.3 — 2026-11-12
 
 - **互換性:** MINOR（置換・撤回の手順と AI の振る舞いの追加のみ。既存の GDR の書式・status 値・遷移・解釈は変わらない）。**解釈版によらず適用**する。v1.x の導入先では、判定と「関連」の付け替えを新 GDR の発行時（旧を `Superseded` にする時点）にまとめて行う

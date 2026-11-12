@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 440" width="1400" height="440" role="img" aria-labelledby="t d">
+<title id="t">GDR の status と遷移</title>
+<desc id="d">有効（Proposed・Accepted・Implemented）と失効（Superseded・Rejected）の 5 値、遷移、撤回時の復帰、二段保管の退避時点。</desc>
+
+<style>
+  svg { --bg:#faf9f6; --fg:#1f2328; --muted:#5f6670; --line:#d6d3cc; --lane:#f0eee8; --lane2:#e9e6de;
+        --card:#ffffff; --accent:#0f7b8a; --accent-soft:rgba(15,123,138,.12); --cut:#9a9a9a; --warn:#be123c;
+        --pp:#2563eb; --pd:#15803d; --pc:#b45309; --pa:#be123c; --ontext:#ffffff; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg:#16181d; --fg:#e6e6e6; --muted:#a0a6ad; --line:#3a3d44; --lane:#1e2127; --lane2:#23262d;
+          --card:#1b1e23; --accent:#3cc0cf; --accent-soft:rgba(60,192,207,.14); --cut:#6b6f76; --warn:#fb7185;
+          --pp:#60a5fa; --pd:#4ade80; --pc:#fbbf24; --pa:#fb7185; --ontext:#111111; }
+  }
+  text { font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",system-ui,sans-serif; fill: var(--fg); }
+  .bg { fill: var(--bg); }
+  .title { font-size: 17px; font-weight: 700; }
+  .h { font-size: 13px; font-weight: 700; }
+  .b { font-size: 12px; font-weight: 700; }
+  .s { font-size: 11px; fill: var(--muted); }
+  .xs { font-size: 10px; fill: var(--muted); }
+  .lab { font-size: 13px; font-weight: 700; fill: var(--muted); }
+  .on { fill: var(--ontext); font-weight: 700; font-size: 12px; text-anchor: middle; dominant-baseline: central; }
+  .card { fill: var(--card); stroke: var(--line); }
+  .lane { fill: var(--lane); }
+  .lane2 { fill: var(--lane2); }
+  .pill { fill: var(--card); stroke: var(--accent); }
+  .pilltx { font-size: 10.5px; font-weight: 700; fill: var(--accent); text-anchor: middle; dominant-baseline: central; }
+  .ln { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .lnf { stroke: var(--fg); stroke-width: 2; fill: none; }
+  .dash { stroke-dasharray: 5 4; }
+  .mid { text-anchor: middle; }
+  .end { text-anchor: end; }
+</style>
+<defs>
+  <marker id="aM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+  <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--fg)"/></marker>
+  <marker id="aW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
+  <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1400" height="440" rx="12"/>
+<text class="title" x="30" y="34">GDR の status と遷移</text>
+<rect class="lane" x="30" y="56" width="1000" height="160" rx="8"/>
+<rect class="lane2" x="30" y="256" width="1000" height="160" rx="8"/>
+<text class="h" x="50" y="80">有効 — 現行の判断として扱う</text>
+<text class="s" x="50" y="204">根拠にできるのは Accepted / Implemented。Proposed は未確定で、前提にしない</text>
+<text class="h" x="50" y="280">失効 — 判断の根拠にしない</text>
+<text class="s" x="50" y="404">Superseded は後継を末端の有効 GDR までたどる。Rejected は「採らない理由」としてのみ引用する</text>
+<line class="lnf" x1="270" y1="140" x2="428" y2="140" marker-end="url(#aF)"/>
+<text class="b mid" x="350" y="130">合意</text>
+<line class="lnf" x1="610" y1="140" x2="768" y2="140" marker-end="url(#aF)"/>
+<text class="b mid" x="690" y="130">実装・反映</text>
+<path class="ln" d="M180 168 C180 250 300 260 320 312" marker-end="url(#aM)"/>
+<text class="s end" x="176" y="244">不採用</text>
+<path class="ln" d="M500 168 C500 250 420 260 400 312" marker-end="url(#aM)"/>
+<text class="s" x="452" y="244">合意後の撤回</text>
+<path class="ln" d="M545 168 C560 250 700 260 730 312" marker-end="url(#aM)"/>
+<text class="s" x="572" y="244">新 GDR による置換</text>
+<path class="ln" d="M860 168 C860 250 820 260 805 312" marker-end="url(#aM)"/>
+<text class="s" x="866" y="244">新 GDR による置換</text>
+<path class="ln dash" d="M870 330 C960 330 990 180 952 150" marker-end="url(#aM)" style="stroke:var(--accent)"/>
+<text class="s" x="978" y="300" style="fill:var(--accent)">復帰</text>
+<rect x="90" y="112" width="180" height="56" rx="28" style="fill:var(--pp)"/>
+<text class="on" x="180" y="140" style="font-size:14px">Proposed</text>
+<rect x="430" y="112" width="180" height="56" rx="28" style="fill:var(--accent)"/>
+<text class="on" x="520" y="140" style="font-size:14px">Accepted</text>
+<rect x="770" y="112" width="180" height="56" rx="28" style="fill:var(--pd)"/>
+<text class="on" x="860" y="140" style="font-size:14px">Implemented</text>
+<rect x="260" y="314" width="180" height="56" rx="28" style="fill:var(--cut);stroke:var(--warn);stroke-width:2;stroke-dasharray:5 3"/>
+<text class="on" x="350" y="342" style="font-size:14px">Rejected</text>
+<rect x="690" y="314" width="180" height="56" rx="28" style="fill:var(--cut)"/>
+<text class="on" x="780" y="342" style="font-size:14px">Superseded</text>
+<text class="xs mid" x="780" y="386">旧の失効は新が Accepted になった時点</text>
+<line class="ln" x1="1032" y1="336" x2="1078" y2="336" marker-end="url(#aM)"/>
+<rect class="card" x="1080" y="256" width="290" height="160" rx="8" style="stroke-dasharray:5 4"/>
+<text class="b" x="1098" y="282">退避（二段保管・推奨）</text>
+<text class="s" x="1098" y="301">INDEX に 1 行サマリを残し、</text>
+<text class="s" x="1098" y="320">本文を退避領域へ移す</text>
+<text class="s" x="1098" y="339">・Superseded: 新が Implemented の時点</text>
+<text class="s" x="1098" y="358">・Rejected: 確定の時点</text>
+<text class="s" x="1098" y="377">いずれも、前提にしている有効な GDR</text>
+<text class="s" x="1098" y="396">が残っていないこと（波及チェック）</text>
+<rect class="card" x="1080" y="56" width="290" height="160" rx="8"/>
+<text class="b" x="1098" y="82">読み方</text>
+<text class="s" x="1098" y="101">・実線: 通常の遷移</text>
+<text class="s" x="1098" y="120">・破線（復帰）: 置換予定の新が撤回</text>
+<text class="s" x="1098" y="139">　されたら、旧を置換前の値に戻す</text>
+<text class="s" x="1098" y="158">・Superseded と Rejected は終端</text>
+<text class="s" x="1098" y="177">・却下案の再提案は新 GDR を起票し</text>
+<text class="s" x="1098" y="196">　derived-from でつなぐ</text>
+</svg>

@@ -54,6 +54,8 @@ ADR と同一:
 - 「X はしない」こと自体を方針として拘束したい場合は、否定形の決定を持つ GDR を起票する（`Rejected` ではない）
 - `Rejected` には理由配下にサブ箇条書き `- **却下理由:** ...` を必須とする。却下した案を再提案する場合は新 GDR を起票し、任意フィールド「関連」で `derived-from GDR-X-NNN` とつなぐ（`supersedes` は使わない）
 
+![GDR の status と遷移 — 有効（Proposed・Accepted・Implemented）と失効（Superseded・Rejected）、撤回時の復帰、二段保管の退避時点](assets/gdr-status-transitions.svg)
+
 **置換（supersede）の記法と切替時点:** 相互リンクは status 行に書く。status 行は「先頭トークンが status 値、以降の `by` 句・括弧が置換リンク」と読む:
 
 ```markdown

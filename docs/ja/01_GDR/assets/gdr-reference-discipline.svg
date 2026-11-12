@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 396" width="1400" height="396" role="img" aria-labelledby="t d">
+<title id="t">参照の規律 — 前向きにたどり、逆向きに見直す</title>
+<desc id="d">失効した GDR から後継を末端の有効 GDR までたどる前向きの規律と、置換・撤回時に前提にしている GDR を見直す逆向きの波及チェック。Rejected・Proposed・Accepted (supersedes X) の扱い。</desc>
+
+<style>
+  svg { --bg:#faf9f6; --fg:#1f2328; --muted:#5f6670; --line:#d6d3cc; --lane:#f0eee8; --lane2:#e9e6de;
+        --card:#ffffff; --accent:#0f7b8a; --accent-soft:rgba(15,123,138,.12); --cut:#9a9a9a; --warn:#be123c;
+        --pp:#2563eb; --pd:#15803d; --pc:#b45309; --pa:#be123c; --ontext:#ffffff; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg:#16181d; --fg:#e6e6e6; --muted:#a0a6ad; --line:#3a3d44; --lane:#1e2127; --lane2:#23262d;
+          --card:#1b1e23; --accent:#3cc0cf; --accent-soft:rgba(60,192,207,.14); --cut:#6b6f76; --warn:#fb7185;
+          --pp:#60a5fa; --pd:#4ade80; --pc:#fbbf24; --pa:#fb7185; --ontext:#111111; }
+  }
+  text { font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",system-ui,sans-serif; fill: var(--fg); }
+  .bg { fill: var(--bg); }
+  .title { font-size: 17px; font-weight: 700; }
+  .h { font-size: 13px; font-weight: 700; }
+  .b { font-size: 12px; font-weight: 700; }
+  .s { font-size: 11px; fill: var(--muted); }
+  .xs { font-size: 10px; fill: var(--muted); }
+  .lab { font-size: 13px; font-weight: 700; fill: var(--muted); }
+  .on { fill: var(--ontext); font-weight: 700; font-size: 12px; text-anchor: middle; dominant-baseline: central; }
+  .card { fill: var(--card); stroke: var(--line); }
+  .lane { fill: var(--lane); }
+  .lane2 { fill: var(--lane2); }
+  .pill { fill: var(--card); stroke: var(--accent); }
+  .pilltx { font-size: 10.5px; font-weight: 700; fill: var(--accent); text-anchor: middle; dominant-baseline: central; }
+  .ln { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .lnf { stroke: var(--fg); stroke-width: 2; fill: none; }
+  .dash { stroke-dasharray: 5 4; }
+  .mid { text-anchor: middle; }
+  .end { text-anchor: end; }
+</style>
+<defs>
+  <marker id="aM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+  <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--fg)"/></marker>
+  <marker id="aW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
+  <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1400" height="396" rx="12"/>
+<text class="title" x="30" y="34">参照の規律 — 前向きにたどり、逆向きに見直す</text>
+<text class="h" x="40" y="74" style="fill:var(--accent)">前向き: 失効した GDR に当たったら、後継を末端の有効 GDR までたどって根拠にする</text>
+<rect x="60" y="92" width="240" height="56" rx="10" style="fill:var(--cut)"/>
+<text class="on" x="180" y="112" style="font-size:14px">GDR-X-001</text>
+<text class="on" x="180" y="132" style="font-weight:400;font-size:11px">Superseded by X-003</text>
+<rect x="380" y="92" width="240" height="56" rx="10" style="fill:var(--cut)"/>
+<text class="on" x="500" y="112" style="font-size:14px">GDR-X-003</text>
+<text class="on" x="500" y="132" style="font-weight:400;font-size:11px">Superseded by X-007</text>
+<rect x="700" y="92" width="240" height="56" rx="10" style="fill:var(--pd)"/>
+<text class="on" x="820" y="112" style="font-size:14px">GDR-X-007</text>
+<text class="on" x="820" y="132" style="font-weight:400;font-size:11px">Implemented（末端）</text>
+<line x1="300" y1="120" x2="378" y2="120" style="stroke:var(--accent);stroke-width:2.5" marker-end="url(#aA)"/>
+<line x1="620" y1="120" x2="698" y2="120" style="stroke:var(--accent);stroke-width:2.5" marker-end="url(#aA)"/>
+<text class="b" x="950" y="116" style="fill:var(--accent)">✓ これを根拠にする</text>
+<text class="s" x="950" y="134">断絶・循環・末端が Proposed / Rejected</text>
+<text class="s" x="950" y="150">なら根拠にせず、人間に報告する</text>
+<text class="h" x="40" y="214" style="fill:var(--warn)">逆向き（波及チェック）:</text>
+<text class="h" x="40" y="232" style="fill:var(--warn)">置換・撤回するときは、</text>
+<text class="h" x="40" y="250" style="fill:var(--warn)">失効する GDR を前提に</text>
+<text class="h" x="40" y="268" style="fill:var(--warn)">している有効な GDR を</text>
+<text class="h" x="40" y="286" style="fill:var(--warn)">見直す</text>
+<rect class="card" x="240" y="250" width="220" height="56" rx="10" style="stroke:var(--warn);stroke-width:2"/>
+<text class="b mid" x="350" y="272">GDR-UI-004（Implemented）</text>
+<text class="s mid" x="350" y="292">関連: depends-on X-003</text>
+<path d="M350 250 C350 215 500 190 500 152" style="fill:none;stroke:var(--warn);stroke-width:1.8;stroke-dasharray:5 4" marker-end="url(#aW)"/>
+<rect class="card" x="560" y="250" width="220" height="56" rx="10" style="stroke:var(--warn);stroke-width:2"/>
+<text class="b mid" x="670" y="272">GDR-OPS-002（Accepted）</text>
+<text class="s mid" x="670" y="292">関連: refines X-003</text>
+<path d="M670 250 C670 215 500 190 500 152" style="fill:none;stroke:var(--warn);stroke-width:1.8;stroke-dasharray:5 4" marker-end="url(#aW)"/>
+<text class="s" x="820" y="270">X-003 が X-007 に置換されたとき、X-003 を前提に</text>
+<text class="s" x="820" y="287">している GDR が残る。人間が 1 件ずつ判定し、</text>
+<text class="s" x="820" y="304">影響なしなら「関連」を付け替え、影響ありなら置換する</text>
+<line class="ln" x1="30" y1="330" x2="1370" y2="330" style="stroke:var(--line)"/>
+<text class="b" x="40" y="356">Rejected</text>
+<text class="s" x="40" y="374">「採らない理由」としてのみ引用する（同じ案の再提案を止める）</text>
+<text class="b" x="520" y="356">Proposed</text>
+<text class="s" x="520" y="374">「未確定」と明示し、前提にした実装はしない</text>
+<text class="b" x="930" y="356">Accepted (supersedes X)</text>
+<text class="s" x="930" y="374">実装はまだ X に従っている前提で扱う</text>
+</svg>

@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 440" width="1400" height="440" role="img" aria-labelledby="t d">
+<title id="t">GDR ビルドアップのサイクルと PDCA</title>
+<desc id="d">起票・レビュー・レビュー反映・合意（Plan）、GDR 起票と実装（Do）、完了処理と再検討条件の監視（Check）、置換・撤回・退避（Act）の流れと、各段階のキーワード・status・成果物。</desc>
+
+<style>
+  svg { --bg:#faf9f6; --fg:#1f2328; --muted:#5f6670; --line:#d6d3cc; --lane:#f0eee8; --lane2:#e9e6de;
+        --card:#ffffff; --accent:#0f7b8a; --accent-soft:rgba(15,123,138,.12); --cut:#9a9a9a; --warn:#be123c;
+        --pp:#2563eb; --pd:#15803d; --pc:#b45309; --pa:#be123c; --ontext:#ffffff; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg:#16181d; --fg:#e6e6e6; --muted:#a0a6ad; --line:#3a3d44; --lane:#1e2127; --lane2:#23262d;
+          --card:#1b1e23; --accent:#3cc0cf; --accent-soft:rgba(60,192,207,.14); --cut:#6b6f76; --warn:#fb7185;
+          --pp:#60a5fa; --pd:#4ade80; --pc:#fbbf24; --pa:#fb7185; --ontext:#111111; }
+  }
+  text { font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",system-ui,sans-serif; fill: var(--fg); }
+  .bg { fill: var(--bg); }
+  .title { font-size: 17px; font-weight: 700; }
+  .h { font-size: 13px; font-weight: 700; }
+  .b { font-size: 12px; font-weight: 700; }
+  .s { font-size: 11px; fill: var(--muted); }
+  .xs { font-size: 10px; fill: var(--muted); }
+  .lab { font-size: 13px; font-weight: 700; fill: var(--muted); }
+  .on { fill: var(--ontext); font-weight: 700; font-size: 12px; text-anchor: middle; dominant-baseline: central; }
+  .card { fill: var(--card); stroke: var(--line); }
+  .lane { fill: var(--lane); }
+  .lane2 { fill: var(--lane2); }
+  .pill { fill: var(--card); stroke: var(--accent); }
+  .pilltx { font-size: 10.5px; font-weight: 700; fill: var(--accent); text-anchor: middle; dominant-baseline: central; }
+  .ln { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .lnf { stroke: var(--fg); stroke-width: 2; fill: none; }
+  .dash { stroke-dasharray: 5 4; }
+  .mid { text-anchor: middle; }
+  .end { text-anchor: end; }
+</style>
+<defs>
+  <marker id="aM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+  <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--fg)"/></marker>
+  <marker id="aW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
+  <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1400" height="440" rx="12"/>
+<text class="title" x="30" y="34">GDR ビルドアップのサイクルと PDCA</text>
+<text class="lab" x="30" y="150">フロー</text>
+<text class="lab" x="30" y="222">キーワード</text>
+<text class="lab" x="30" y="294">status</text>
+<text class="lab" x="30" y="351">成果物</text>
+<rect class="lane" x="120" y="62" width="500" height="315" rx="8"/>
+<circle cx="142" cy="84" r="11" style="fill:var(--pp)"/><text class="on" x="142" y="84">P</text>
+<text class="h" x="160" y="89">Plan — 起票から合意まで</text>
+<rect class="lane" x="630" y="62" width="250" height="315" rx="8"/>
+<circle cx="652" cy="84" r="11" style="fill:var(--pd)"/><text class="on" x="652" y="84">D</text>
+<text class="h" x="670" y="89">Do — GDR 起票と実装</text>
+<rect class="lane" x="890" y="62" width="240" height="315" rx="8"/>
+<circle cx="912" cy="84" r="11" style="fill:var(--pc)"/><text class="on" x="912" y="84">C</text>
+<text class="h" x="930" y="89">Check — 実装が判断を検証</text>
+<rect class="lane" x="1140" y="62" width="250" height="315" rx="8"/>
+<circle cx="1162" cy="84" r="11" style="fill:var(--pa)"/><text class="on" x="1162" y="84">A</text>
+<text class="h" x="1180" y="89">Act — 判断は積み上がる</text>
+<rect class="card" x="120" y="102" width="114" height="90" rx="6"/>
+<text class="b" x="130" y="122">1. 起票</text>
+<text class="s" x="130" y="140">改善提案（T2）</text>
+<text class="s" x="130" y="155">原案は Proposed</text>
+<text class="s" x="130" y="170">代替案・再検討</text>
+<text class="s" x="130" y="185">条件・出所を書く</text>
+<rect class="card" x="242" y="102" width="114" height="90" rx="6"/>
+<text class="b" x="252" y="122">2. レビュー</text>
+<text class="s" x="252" y="140">批判的に読む</text>
+<text class="s" x="252" y="155">指摘を</text>
+<text class="s" x="252" y="170">_reviewed に</text>
+<rect class="card" x="364" y="102" width="114" height="90" rx="6"/>
+<text class="b" x="374" y="122">3. レビュー反映</text>
+<text class="s" x="374" y="140">指摘を本体に</text>
+<text class="s" x="374" y="155">統合し</text>
+<text class="s" x="374" y="170">_reviewed を削除</text>
+<rect class="card" x="486" y="102" width="114" height="90" rx="6" style="stroke:var(--pp);stroke-width:2"/>
+<text class="b" x="496" y="122" style="fill:var(--pp)">4. 合意</text>
+<text class="s" x="496" y="140">人間が承認</text>
+<text class="s" x="496" y="155">出所を更新</text>
+<text class="s" x="496" y="170">置換なら旧を</text>
+<text class="s" x="496" y="185">Superseded に</text>
+<rect class="card" x="630" y="102" width="110" height="90" rx="6"/>
+<text class="b" x="640" y="122">5. GDR 起票</text>
+<text class="s" x="640" y="140">GDR 文書と</text>
+<text class="s" x="640" y="155">INDEX に登録</text>
+<text class="s" x="640" y="170">文書と実装は</text>
+<text class="s" x="640" y="185">混ぜない</text>
+<rect class="card" x="750" y="102" width="110" height="90" rx="6"/>
+<text class="b" x="760" y="122">6. 実装</text>
+<text class="s" x="760" y="140">Phase に分割</text>
+<text class="s" x="760" y="155">こまめに反映</text>
+<text class="s" x="760" y="170">テスト・ビルド</text>
+<text class="s" x="760" y="185">で検証</text>
+<rect class="card" x="890" y="102" width="105" height="90" rx="6"/>
+<text class="b" x="900" y="122">7. 完了処理</text>
+<text class="s" x="900" y="140">→ Implemented</text>
+<text class="s" x="900" y="155">ふりかえり・</text>
+<text class="s" x="900" y="170">INDEX 更新</text>
+<text class="s" x="900" y="185">付け替え→退避</text>
+<rect class="card" x="1005" y="102" width="105" height="90" rx="6"/>
+<text class="b" x="1015" y="122">検証の継続</text>
+<text class="s" x="1015" y="140">GDR は仮説</text>
+<text class="s" x="1015" y="155">再検討条件を</text>
+<text class="s" x="1015" y="170">見張る</text>
+<rect class="card" x="1140" y="102" width="112" height="90" rx="6" style="stroke:var(--pa);stroke-width:2"/>
+<text class="b" x="1150" y="122" style="fill:var(--pa)">条件の発火</text>
+<text class="s" x="1150" y="140">本質が変わる</text>
+<text class="s" x="1150" y="155">→ 新 GDR で置換</text>
+<text class="s" x="1150" y="170">元は編集しない</text>
+<text class="s" x="1150" y="185">軽微なら直接修正</text>
+<rect class="card" x="1260" y="102" width="112" height="90" rx="6"/>
+<text class="b" x="1270" y="122">撤回・却下</text>
+<text class="s" x="1270" y="140">Rejected</text>
+<text class="s" x="1270" y="155">（却下理由）</text>
+<text class="s" x="1270" y="170">INDEX に 1 行</text>
+<text class="s" x="1270" y="185">本文は退避</text>
+<line class="ln" x1="234" y1="147" x2="241" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="356" y1="147" x2="363" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="478" y1="147" x2="485" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="600" y1="147" x2="629" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="740" y1="147" x2="749" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="860" y1="147" x2="889" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="995" y1="147" x2="1004" y2="147" marker-end="url(#aM)"/>
+<line class="ln" x1="1110" y1="147" x2="1139" y2="147" marker-end="url(#aM)"/>
+<path class="ln dash" d="M478 174 C430 200 330 200 300 194" marker-end="url(#aM)"/>
+<text class="xs mid" x="390" y="210">修正 → 再レビュー</text>
+<rect class="pill" x="120" y="216" width="114" height="20" rx="10.0"/><text class="pilltx" x="177.0" y="226.0">改善提案：</text>
+<rect class="pill" x="242" y="216" width="114" height="20" rx="10.0"/><text class="pilltx" x="299.0" y="226.0">レビュー：</text>
+<rect class="pill" x="364" y="216" width="114" height="20" rx="10.0"/><text class="pilltx" x="421.0" y="226.0">レビュー反映：</text>
+<rect class="pill" x="486" y="216" width="114" height="20" rx="10.0"/><text class="pilltx" x="543.0" y="226.0">人間の承認</text>
+<rect class="pill" x="630" y="216" width="230" height="20" rx="10.0"/><text class="pilltx" x="745.0" y="226.0">実装（こまめに反映）</text>
+<rect class="pill" x="890" y="216" width="105" height="20" rx="10.0"/><text class="pilltx" x="942.5" y="226.0">ふりかえり</text>
+<rect class="pill" x="1005" y="216" width="105" height="20" rx="10.0"/><text class="pilltx" x="1057.5" y="226.0">整合性チェック</text>
+<rect class="pill" x="1140" y="216" width="112" height="20" rx="10.0"/><text class="pilltx" x="1196.0" y="226.0">波及チェック</text>
+<rect class="pill" x="1260" y="216" width="112" height="20" rx="10.0"/><text class="pilltx" x="1316.0" y="226.0">アーカイブ：</text>
+<rect x="120" y="244" width="1252" height="20" rx="10" style="fill:var(--accent-soft);stroke:var(--accent)"/>
+<text class="pilltx" x="746" y="254">一気通貫： — 現在地を判定し、次のフェーズだけ進める（済んだフェーズはやり直さない）</text>
+<rect class="pill" x="120" y="282" width="478" height="24" rx="12.0" style="fill:var(--pp);stroke:none"/><text class="on" x="359.0" y="294.0">Proposed（未確定・前提にしない）</text>
+<rect class="pill" x="602" y="282" width="286" height="24" rx="12.0" style="fill:var(--accent);stroke:none"/><text class="on" x="745.0" y="294.0">Accepted（合意済み・未実装）</text>
+<rect class="pill" x="892" y="282" width="236" height="24" rx="12.0" style="fill:var(--pd);stroke:none"/><text class="on" x="1010.0" y="294.0">Implemented</text>
+<rect class="pill" x="1132" y="282" width="240" height="24" rx="12.0" style="fill:var(--cut);stroke:none"/><text class="on" x="1252.0" y="294.0">Superseded / Rejected（失効）</text>
+<text class="xs mid" x="600" y="320">↑ 合意</text><text class="xs mid" x="890" y="320">↑ 完了処理</text>
+<text class="s" x="130" y="353">改善提案・_reviewed（反映後に削除）</text>
+<text class="s" x="640" y="353">GDR・INDEX・成果物・変更履歴</text>
+<text class="s" x="900" y="353">ふりかえり・INDEX</text>
+<text class="s" x="1150" y="346">新 GDR・INDEX の 1 行サマリ・</text>
+<text class="s" x="1150" y="361">退避領域（notes/_archive/）</text>
+<path class="lnf" d="M1265 378 L1265 396 L177 396 L177 382" marker-end="url(#aF)"/>
+<text class="b mid" x="716" y="420">次のサイクル — 新しい要件・課題、または再検討条件の発火から次の改善提案へ。1 周ごとに GDR が 1 つ以上積み上がる</text>
+</svg>

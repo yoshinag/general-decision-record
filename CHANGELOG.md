@@ -8,6 +8,20 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.3 — 2026-11-12
+
+- **互換性:** MINOR（置換・撤回の手順と AI の振る舞いの追加のみ。既存の GDR の書式・status 値・遷移・解釈は変わらない）。**解釈版によらず適用**する。v1.x の導入先では、判定と「関連」の付け替えを新 GDR の発行時（旧を `Superseded` にする時点）にまとめて行う
+- **要約:**
+  - **波及チェック:** 置換・合意後の撤回で失効する GDR を「関連」の `depends-on` / `refines` で前提にしている有効な GDR を、① 起票時に列挙（新 GDR の「影響」に「波及候補」）→ ② 合意時に人間が 1 件ずつ判定（影響なし: 付け替える / 外す / `relates-to` に弱める、影響あり: その GDR を置換する GDR を起票）→ ③ 新が `Implemented` になった時点で付け替える。AI は波及先を一括で書き換えない。scope の一致は基準にしない
+  - **不変条件:** 失効した GDR を `depends-on` / `refines` で指す有効な GDR が残っている間は、その GDR を退避しない（二段保管の退避時点はこれを満たしてから）。未解決の依存は「失効 GDR を指す有効な GDR」として検出できる
+  - [01 §3](docs/ja/01_GDR/01_GENERAL_DECISION_RECORD.md) に規則と退避の条件、[02 §5.2 / §6](docs/ja/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) に手順と参照の規律の逆向きの確認、[04 §5](docs/ja/01_GDR/guide/04_PROMPT_GUIDE.md) にプロンプト `波及チェック [GDR-ID]`、[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) に config の同期。テンプレートは変更なし
+  - 根拠: [kaizen 013](docs/ja/91_demo_buildup_documents.md/kaizen/13_GDR置換時の波及チェック提案.md)（GDR-META-038）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: 導入済みの GDR について、不変条件の違反（退避済みの失効 GDR を `depends-on` / `refines` で指す有効な GDR）を一度確認する（`波及チェック` を引数なしで実行）
+  - 任意: `_reference/01_GENERAL_DECISION_RECORD.md` / `_reference/02_AI_DRIVEN_GDR_BUILDUP.md` / `_reference/guide/04_PROMPT_GUIDE.md` を v2.3 で取り直す
+- **user-level config:** 更新必要 — `CLAUDE.md`（不可侵ルールに波及チェックを追加・現行版 v2.3）、`commands/gdr-flow.md`（フェーズ 1・4・7 と版条件）、`commands/gdr-docs.md`（旧 GDR の退避と版条件）、`commands/gdr-archive.md`（GDR 本文の退避前の確認）
+
 ## v2.2 — 2026-10-16
 
 - **互換性:** MINOR（プロンプトと AI の振る舞いの追加のみ。既存の GDR の書式・解釈は変わらない）

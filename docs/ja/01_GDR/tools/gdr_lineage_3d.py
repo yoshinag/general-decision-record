@@ -31,6 +31,8 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
   - 画面で scope / PREFIX を選ぶと、当てはまる GDR と、そこから表示中のリンクを指定の段数（1 段・2 段・すべて）
     たどった GDR だけを描く。表示数の上限も選べる（既定 50。超えたら、絞り込み中は当てはまる GDR → 近い段の順、
     絞り込みなしは日時の新しい順に残す）。URL の `#0?scope=arch&prefix=ARCH&depth=1&limit=50` でも指定できる
+  - scope・PREFIX の既定はリストの 1 番目（PREFIX はその scope にある 1 番目）。「すべて」も選べる。URL で検索ワード・scope・
+    PREFIX・GDR ID のどれかを指定したときは、指定しなかったものは「すべて」になる
   - 検索ワード（空白区切りで AND。GDR ID・要約・scope・本文を大文字小文字を区別せずに探す）も絞り込みに使える。scope / PREFIX と
     併せると、すべてに当てはまる GDR が起点になる。URL では `q=`
   - GDR を選んでいない間は、右に目次を出す（表示中の GDR を文書ごとに並べる。絞り込み・段数・上限・線のない GDR を隠す、に従う。
@@ -736,6 +738,14 @@ function fillFilters() {
 function loadDataset(i, f) {
   cur = DATASETS[i]; clearSel(); fillFilters();
   document.getElementById('fWord').value = f?.get('q') || '';
+  // 既定は scope・PREFIX ともリストの 1 番目（初回の表示件数を抑える）。PREFIX はその scope にある 1 番目。
+  // URL で検索ワード・scope・PREFIX・GDR ID のどれかを指定したときは、指定しなかったものを「すべて」のままにする
+  if (!f || !['q','scope','prefix','id'].some(k => f.get(k))) {
+    const fsEl = document.getElementById('fScope'), fpEl = document.getElementById('fPrefix');
+    if (fsEl.options.length > 1) fsEl.value = fsEl.options[1].value;
+    const first = cur.nodes.filter(n => n.status !== 'Unknown' && (!fsEl.value || scopesOf(n).includes(fsEl.value))).map(n => prefixOf(n.id)).filter(Boolean).sort()[0];
+    if (first) fpEl.value = first;
+  }
   if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
   const s = cur.stats, ec = s.edgeCounts;
@@ -873,6 +883,7 @@ const [hPath, hQs] = hash.split('?');
 const [hDs, hId, hDoc] = hPath.split('/');
 const hFilter = new URLSearchParams(hQs || '');
 const hIdx = /^\d+$/.test(hDs || '') && +hDs < DATASETS.length ? +hDs : 0;
+if (hId) hFilter.set('id', hId);
 dsSel.value = hIdx; loadDataset(hIdx, hFilter);
 if (hId) setTimeout(() => { const n = cur.nodes.find(n => n.id === hId); if (!n) return;
   focusNode(n); if (hDoc === 'doc' && n.file) openReader(n.file, n.id); }, 2500);

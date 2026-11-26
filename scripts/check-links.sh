@@ -28,6 +28,7 @@ check_file() {
     cleaned=$(printf '%s\n' "$line" | sed 's/`[^`]*`//g')
     while read -r link; do
       [ -z "$link" ] && continue
+      link="${link%% \'*}"   # Docsify のリンクの title（例: ':ignore'）を除く
       link="${link%%#*}"
       [ -z "$link" ] && continue
       case "$link" in http://*|https://*|mailto:*) continue ;; esac

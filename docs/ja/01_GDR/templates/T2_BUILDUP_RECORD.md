@@ -42,6 +42,7 @@
 - **日時:** {YYYY-MM-DDTHH:MM:SS+09:00}（任意 — ISO 8601 日付時刻、オフセット付き）
 - **関連:** {型 対象, ...}（任意 — 型は depends-on / refines / relates-to / derived-from。[01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) 参照）
 - **理由の出所:** {human（発言の短い引用） | ai-reviewed | ai}（任意 — AI 起票時は必須。混在時は最も弱い値。[01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) 参照）
+- **uid:** {ツールで生成した UUID v7。手で書かない}（任意 — AI 起票時は推奨。生成のコマンドと規則は [01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) 参照）
 
 
 ---

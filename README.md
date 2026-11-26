@@ -48,10 +48,11 @@ docs/                                      # Docsify サイト（GitHub Pages �
 │   │   │   ├── 04_PROMPT_GUIDE.md
 │   │   │   ├── 05_CLAUDE_CODE_SETUP.md
 │   │   │   └── 06_VISUALIZATION_GUIDE.md   # 可視化ガイドライン
-│   │   └── templates/                     # テンプレート
-│   │       ├── T0_FIRST_GDR_SAMPLE.md     # 最初の GDR サンプル
-│   │       ├── T1_CONTEXT_DEFINITIONS.md  # 前提定義書
-│   │       └── T2_BUILDUP_RECORD.md       # ビルドアップ記録・改善提案
+│   │   ├── templates/                     # テンプレート
+│   │   │   ├── T0_FIRST_GDR_SAMPLE.md     # 最初の GDR サンプル
+│   │   │   ├── T1_CONTEXT_DEFINITIONS.md  # 前提定義書
+│   │   │   └── T2_BUILDUP_RECORD.md       # ビルドアップ記録・改善提案
+│   │   └── tools/                         # 任意の補助ツール（GDR 仕様の版の対象外）
 │   ├── 91_demo_buildup_documents.md/      # デモ・改善提案
 │   │   └── kaizen/
 │   └── bug_fix_report/                    # バグレポート

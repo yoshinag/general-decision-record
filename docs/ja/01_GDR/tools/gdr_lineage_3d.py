@@ -35,6 +35,10 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
     PREFIX・GDR ID のどれかを指定したときは、指定しなかったものは「すべて」になる
   - 検索ワード（空白区切りで AND。GDR ID・要約・scope・本文を大文字小文字を区別せずに探す）も絞り込みに使える。scope / PREFIX と
     併せると、すべてに当てはまる GDR が起点になる。URL では `q=`
+  - status でも絞り込める（すべて・有効・失効・各 status。既定はすべて）。検索ワード・scope・PREFIX の起点と関連の段数でたどった
+    GDR のうち、当てはまる status のものだけを描く。URL では `status=`
+  - GDR を選ぶと、絞り込み（status・scope・PREFIX・検索ワード・上限）の外にある先祖・子孫・前提・被前提も一時的に描き足す
+    （選択を解くと戻る）
   - GDR を選んでいない間は、右に目次を出す（表示中の GDR を文書ごとに並べる。絞り込み・段数・上限・線のない GDR を隠す、に従う。
     絞り込み中は当てはまる GDR を太字、たどった関連を薄字にする）。項目をクリックするとその GDR を選ぶ
 
@@ -569,10 +573,11 @@ TEMPLATE = r'''<!DOCTYPE html>
   <h2>データ</h2>
   <select id="ds"></select>
   <div id="stats" class="mut" style="margin-top:4px"></div>
-  <h2>絞り込み（検索ワード / scope / PREFIX）</h2>
+  <h2>絞り込み（検索ワード / scope / PREFIX / status）</h2>
   <input id="fWord" type="search" placeholder="検索ワード（ID・要約・scope・本文。空白区切りで AND）" style="margin-bottom:4px">
   <select id="fScope"></select>
   <select id="fPrefix" style="margin-top:4px"></select>
+  <select id="fStatus" style="margin-top:4px"></select>
   <label class="row" style="margin-top:4px">関連の段数 <select id="fDepth" style="width:auto"><option value="1">1 段</option><option value="2">2 段</option><option value="all" selected>すべて</option></select></label>
   <label class="row" style="margin-top:4px">表示数の上限 <select id="fLimit" style="width:auto"><option value="all">なし</option><option value="20">20</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select></label>
   <div id="fInfo" class="mut"></div>
@@ -628,6 +633,7 @@ document.getElementById('legLink').innerHTML = Object.values(LINK)
   .map(s => `<div class="row"><span class="bar" style="background:${s.c};${s.c==='#1e293b'?'outline:1px solid #475569':''}"></span>${s.l}</div>`).join('')
   + `<div class="row"><span class="bar" style="background:${BAD}"></span>不変条件の違反（閉路・置換と派生の日時の逆転）</div>`;
 
+let base = { nodes:[], links:[] }, extended = 0;
 let cur, sel = null, hl = { nodes:new Set(), links:new Set() }, seeds = new Set();
 
 if (typeof ForceGraph3D === 'undefined' || typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
@@ -691,6 +697,10 @@ function render() {
     nodes = cur.nodes.filter(n => keep.has(n.id));
     document.getElementById('fInfo').textContent = `当てはまる GDR ${seeds.size} 件（大きい点）＋ 関連 ${keep.size - seeds.size} 件`;
   } else document.getElementById('fInfo').textContent = '';
+  // status の絞り込み: 起点とたどった関連のうち、当てはまる status の GDR だけを描く（関連は GDR を選ぶと一時的に足す）
+  const fst = document.getElementById('fStatus').value;
+  if (fst) { const before = nodes.length; nodes = nodes.filter(n => statusOk(n, fst));
+    document.getElementById('fInfo').textContent += `${document.getElementById('fInfo').textContent ? ' / ' : ''}status で ${before - nodes.length} 件を隠す`; }
   // 表示数の上限: 絞り込み中は当てはまる GDR → 近い段の順、絞り込みなしは日時の新しい順（本文なしの点は後ろ）に残す
   if (nodes.length > limit) {
     const total = nodes.length;
@@ -704,21 +714,33 @@ function render() {
   links = links.filter(l => shown.has(l.source) && shown.has(l.target));
   const used = new Set(links.flatMap(l => [l.source, l.target]));
   if (hideIso) nodes = nodes.filter(n => used.has(n.id));
-  Graph.graphData({ nodes, links });
-  renderToc(nodes, fs, fp, fw);
+  base = { nodes, links }; extended = 0;
+  Graph.graphData(base);
+  renderToc(nodes, fs, fp, fw, fst);
 }
 
 // 目次: 表示中の GDR（絞り込み・段数・上限・線のない GDR を隠す、を反映）を文書ごとに並べる。GDR を選んでいない間だけ右に出す
-function renderToc(nodes, fs, fp, fw) {
+const STATUS_GROUPS = { active:['Proposed','Accepted','Implemented'], inactive:['Superseded','Rejected'] };
+const statusOk = (n, v) => n.status !== 'Unknown' && (STATUS_GROUPS[v] ? STATUS_GROUPS[v].includes(n.status) : n.status === v);
+// 描いているリンク（render と同じ規則）に、強調中のリンク（keys）を足したもの。ids の GDR どうしに限る
+function linksFor(ids, keys) {
+  const showDep = document.getElementById('showDep').checked, showRel = document.getElementById('showRel').checked;
+  return cur.links.filter(l => (LINK[l.type].lin || (l.type === 'depends-on' && showDep) || (l.type === 'relates-to' && showRel) || keys.has(l.k))
+      && ids.has(sid(l.source)) && ids.has(sid(l.target)))
+    .map(l => ({ ...l, source: sid(l.target), target: sid(l.source) }));
+}
+
+function renderToc(nodes, fs, fp, fw, fst) {
   const pos = new Map(cur.nodes.map((n, i) => [n.id, i]));
   const groups = new Map();
   [...nodes].sort((a, b) => pos.get(a.id) - pos.get(b.id)).forEach(n => {
     const k = n.status === 'Unknown' || !n.file ? '' : n.file; (groups.get(k) || groups.set(k, []).get(k)).push(n); });
   const keys = [...groups.keys()].filter(k => k).sort().concat(groups.has('') ? [''] : []);
-  const cond = [fw && `「${fw}」`, fs && 'scope: ' + fs, fp && 'PREFIX: ' + fp].filter(Boolean).join(' / ');
+  const stl = fst && document.querySelector(`#fStatus option[value="${fst}"]`)?.textContent;
+  const cond = [fw && `「${fw}」`, fs && 'scope: ' + fs, fp && 'PREFIX: ' + fp, stl].filter(Boolean).join(' / ');
   const nReal = nodes.filter(n => n.status !== 'Unknown').length;
   document.getElementById('tocInfo').innerHTML = esc(cond ? `${cond} の表示中 ${nReal} 件` : `表示中 ${nReal} 件（絞り込みなし）`)
-    + (cond ? '<br>太字: 当てはまる GDR / 薄字: たどった関連' : '') + (nodes.length ? '' : '<br>表示中の GDR はありません');
+    + (seeds.size ? '<br>太字: 当てはまる GDR / 薄字: たどった関連' : '') + (nodes.length ? '' : '<br>表示中の GDR はありません');
   const item = n => `<div class="ti${seeds.size ? (seeds.has(n.id) ? ' seed' : ' rel') : ''}" data-id="${esc(n.id)}" title="${esc(n.id + ': ' + n.title + '（' + n.status + '）')}">`
     + `<span class="dot" style="background:${STATUS[n.status]?.c || '#64748b'}"></span><span class="tid">${esc(n.id)}</span>`
     + `<span class="tt">${esc(String(n.title || '').replace(/\*\*|`/g, ''))}</span></div>`;
@@ -733,6 +755,9 @@ function fillFilters() {
   const sc = [...new Set(real.flatMap(scopesOf))].sort(), px = [...new Set(real.map(n => prefixOf(n.id)).filter(Boolean))].sort();
   document.getElementById('fScope').innerHTML = opt('', 'scope: すべて') + sc.map(v => opt(v, 'scope: ' + v)).join('');
   document.getElementById('fPrefix').innerHTML = opt('', 'PREFIX: すべて') + px.map(v => opt(v, 'PREFIX: ' + v)).join('');
+  const st = Object.keys(STATUS).filter(k => real.some(n => n.status === k));
+  document.getElementById('fStatus').innerHTML = opt('', 'status: すべて') + opt('active', 'status: 有効（Proposed / Accepted / Implemented）')
+    + opt('inactive', 'status: 失効（Superseded / Rejected）') + st.map(v => opt(v, 'status: ' + v)).join('');
 }
 
 function loadDataset(i, f) {
@@ -740,13 +765,13 @@ function loadDataset(i, f) {
   document.getElementById('fWord').value = f?.get('q') || '';
   // 既定は scope・PREFIX ともリストの 1 番目（初回の表示件数を抑える）。PREFIX はその scope にある 1 番目。
   // URL で検索ワード・scope・PREFIX・GDR ID のどれかを指定したときは、指定しなかったものを「すべて」のままにする
-  if (!f || !['q','scope','prefix','id'].some(k => f.get(k))) {
+  if (!f || !['q','scope','prefix','status','id'].some(k => f.get(k))) {
     const fsEl = document.getElementById('fScope'), fpEl = document.getElementById('fPrefix');
     if (fsEl.options.length > 1) fsEl.value = fsEl.options[1].value;
     const first = cur.nodes.filter(n => n.status !== 'Unknown' && (!fsEl.value || scopesOf(n).includes(fsEl.value))).map(n => prefixOf(n.id)).filter(Boolean).sort()[0];
     if (first) fpEl.value = first;
   }
-  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
+  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['status','fStatus'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
   const s = cur.stats, ec = s.edgeCounts;
   const lin = (ec['supersedes']||0) + (ec['refines']||0) + (ec['derived-from']||0);
@@ -794,10 +819,19 @@ function focusNode(node) {
   const desc = tree(node.id, m.down, 1, new Set(), []);
   const pre = tree(node.id, m.pre, 1, new Set(), []);
   const preOf = tree(node.id, m.preOf, 1, new Set(), []);
+  // 絞り込みの外にある関連（先祖・子孫・前提・被前提）を一時的に描き足す。選択を解くと戻す
+  const shownIds = new Set(base.nodes.map(n => n.id));
+  const extra = [...hl.nodes].filter(id => !shownIds.has(id)).map(byId).filter(Boolean);
+  if (extra.length || extended) {
+    const ids = new Set([...shownIds, ...extra.map(n => n.id)]);
+    Graph.graphData({ nodes:[...base.nodes, ...extra], links:linksFor(ids, hl.links) });
+    extended = extra.length;
+  }
   const role = !m.up[node.id] && !m.down[node.id] ? '（系譜のリンクなし）' : !m.up[node.id] ? '（起点）' : !m.down[node.id] ? '（末端）' : '';
   document.getElementById('detailHead').innerHTML =
     `<div style="color:#38bdf8;font-size:12px">${esc(node.id)} · ${esc(node.scope)} · ${esc(node.file)}</div>
-     <div style="font-weight:600;margin:4px 0 0" class="md">${DOMPurify.sanitize(marked.parseInline(node.title), PURIFY)}</div>`;
+     <div style="font-weight:600;margin:4px 0 0" class="md">${DOMPurify.sanitize(marked.parseInline(node.title), PURIFY)}</div>`
+    + (extended ? `<div class="mut" style="margin-top:4px">絞り込みの外にある関連 ${extended} 件を一時的に表示中（選択を解くと戻る）</div>` : '');
   const mdEl = document.getElementById('tabMd');
   if (node.md) renderMd(mdEl, node.md); else mdEl.innerHTML = '<p class="mut">この集合に本文がありません。</p>';
   document.getElementById('openDoc').style.display = node.file ? '' : 'none';
@@ -814,10 +848,12 @@ ${preOf.length ? preOf.join('\n') : '  なし'}</pre>`;
   document.getElementById('detail').style.display = 'block';
   document.getElementById('toc').style.display = 'none';
   refresh();
-  const d = 90, r = 1 + d / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
-  Graph.cameraPosition({ x:node.x * r, y:node.y * r, z:node.z * r }, node, 900);
+  const cam = () => { const d = 90, r = 1 + d / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+    Graph.cameraPosition({ x:(node.x || 0) * r, y:(node.y || 0) * r, z:(node.z || 0) * r }, node, 900); };
+  if (node.x == null) setTimeout(cam, 800); else cam();
 }
 function clearSel() { sel = null; hl = { nodes:new Set(), links:new Set() };
+  if (extended) { Graph.graphData(base); extended = 0; }
   document.getElementById('detail').style.display = 'none'; document.getElementById('toc').style.display = ''; refresh(); }
 function refresh() { Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()); }
 
@@ -871,12 +907,12 @@ document.addEventListener('click', e => { const id = e.target.closest?.('[data-i
   if (!n) return; closeReader(); focusNode(n); });
 document.getElementById('close').onclick = clearSel;
 let wordTimer; document.getElementById('fWord').oninput = () => { clearTimeout(wordTimer); wordTimer = setTimeout(() => { clearSel(); render(); }, 250); };
-['showDep','showRel','hideIso','fScope','fPrefix','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
+['showDep','showRel','hideIso','fScope','fPrefix','fStatus','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');
 dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
-// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? q=…&scope=…&prefix=…&depth=1|2|all&limit=20|50|100|200。
+// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? q=…&scope=…&prefix=…&status=Proposed|…|active|inactive&depth=1|2|all&limit=20|50|100|200。
 // 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1、#0?limit=50）
 let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const [hPath, hQs] = hash.split('?');

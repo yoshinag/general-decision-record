@@ -8,6 +8,21 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.9 — 2026-11-26
+
+- **互換性:** MINOR（任意のコマンド `/gdr-lineage` に `upgrade` を足し、`/gdr-review`・`レビュー：` に実行者・レビュアーのモデル・effort の引数を足した。GDR の書式・status 値・規則は変わらない。必須の移行なし）。**解釈版によらず適用**する。**user-level config を更新すると、`/gdr-lineage` は上流のツールの更新を自動では取り込まなくなる**（手元の写しを使い、`upgrade` を付けたときと写しが無いときだけ取得する。`save` の前に、写しがコミット済みの HTML の版より古ければ保存しない）。`/gdr-review` は引数を付けなければ従来どおり
+- **要約:**
+  - **`/gdr-lineage upgrade`:** ツールは `~/.local/share/gdr/` の写しを使い、毎回は取りに行かない。`upgrade` で main の最新を一時ファイルに取得し、`SPEC_VERSION` の行と構文を確かめてから置き換え、結果を `TOOL_FETCH=replaced|unchanged|failed` で報告する。失敗しても写しで続ける。`save` の前に写しの更新日とコミット済みの HTML の版を比べ、写しが古ければ保存しない（日付の粒度なので同じ日の新旧は見分けない）（[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)、[06 §4](docs/ja/01_GDR/guide/06_VISUALIZATION_GUIDE.md)）
+  - **v2.7 の訂正:** 「`curl -z` で main の更新だけ取り直す」は事実と違っていた。raw.githubusercontent.com は `Last-Modified` を返さず、毎回取得していた
+  - **レビューの引数:** `/gdr-review`・`レビュー：` に、実行者（`main` / `sub`）・レビュアーのモデル（Agent ツールのエイリアス）・effort の段階を指定できる。指定しなければ従来どおり（`gdr-reviewer` の frontmatter で決まる）。指定はその回だけ。両端から連続して並ぶ語だけを読み、既定でない指定は委任の前に 1 行示す。`main` はメインセッションが `_reviewed.md` を書いて反映せず止める。指定した呼び出しが失敗したら代替に進まず止める。`_reviewed.md` の冒頭に「レビューの実行」の 1 行を書く（[05 §3](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)）
+  - 根拠: [kaizen 017](docs/ja/91_demo_buildup_documents.md/kaizen/17_系譜ビューアの取得をupgradeに限る提案.md)（GDR-META-042。`refines` GDR-META-040。040 の文は上書きしない）、[kaizen 018](docs/ja/91_demo_buildup_documents.md/kaizen/18_レビューの実行者とモデルの引数指定提案.md)（GDR-META-043。`refines` GDR-META-039 で、039 の 3 か所に注記）
+  - ツール側の変更（版の対象外。記録のため）: 3D の系譜ビューアの status の既定を Proposed に、scope・PREFIX の既定を「すべて」にした。status の頭文字（色に頼らない）、失効の網目、視点を戻す、目次からの文書全体の表示、2D の描き方（`view=2d`）を追加
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: なし
+  - 任意: `commands/gdr-lineage.md` を更新したら、1 回 `/gdr-lineage upgrade` でツールを取り直す。プロジェクトに `.claude/agents/gdr-reviewer.md` を置いている導入先は写しを取り直す（丸ごと置き換わるため。取り直さなくても「レビューの実行」の 1 行は呼び出し側が渡すので書かれる）。`/gdr-review` の引数の `model` / `effort` は、プロジェクトの定義の frontmatter よりも優先される（その回だけ）
+- **user-level config:** 更新必要 — `CLAUDE.md`（モデルの役割分担・§3 の `レビュー：` とコマンド表・現行版 v2.9）、`commands/gdr-lineage.md`（`upgrade`・取得・版の比較）、`commands/gdr-map.md`（「3D」で `upgrade` も渡す）、`commands/gdr-review.md`（引数・`main`・記録）、`commands/gdr-apply-review.md`（止まる条件・報告）、`commands/gdr-flow.md`（セルフレビューは既定で委ねる・合意前の提示）、`agents/gdr-reviewer.md`（記録の 1 行・保守メモ）。`gdr-review.md`・`gdr-apply-review.md`・`agents/gdr-reviewer.md` は同時に更新する
+
 ## v2.8 — 2026-11-26
 
 - **互換性:** MINOR（任意のコマンド `/gdr-lineage` に `save` を足し、06 §4 の「生成した HTML はコミットしない」を「`save` のとき以外はコミットしない」に改めた。GDR の書式・status 値・規則は変わらない。必須の移行なし）。**解釈版によらず適用**する。**user-level config を更新すると、`/gdr-lineage save` が生成した HTML を `notes/tools/gdr_lineage.html` に保存してコミットするようになる**（`save` を付けなければ従来どおりリポジトリの外に出してコミットしない）

@@ -142,9 +142,9 @@ flowchart TD
 |---|---|---|---|---|
 | 0.1 | レビュー（別モデル）→ 反映 | GDR-META-042 | — | 完了（A-4・A-5 はユーザーの選択） |
 | 0.2 | 合意 | GDR-META-042 | 0.1 | 完了（2026-11-26） |
-| 1.1 | `commands/gdr-lineage.md`・`commands/gdr-map.md`・`CLAUDE.md` のコマンド表（リポジトリ外配備） | GDR-META-042 | 0.2 | 未着手 |
-| 1.2 | 05・06 §4 | GDR-META-042 | 0.2 | 未着手 |
-| 1.3 | 確かめる（置き場と URL を変数にして使い捨ての場所で。導入先は使い捨ての git リポジトリ）: (1) 写しあり・`upgrade` なし → 取得しない / (2) 写しなし → 取得する / (3) 旧い版（例: `git show v2.7:docs/ja/01_GDR/tools/gdr_lineage_3d.py`）を置いて `upgrade` → `replaced` と前後の版 / (4) 取得失敗（URL を変えて再現）→ `failed` で写しが変わらない / (5) `upgrade save` → 取り直してから保存 / (6) 上流リポジトリ自身で `upgrade` → 取得しない / (7) 写しの `TOOL_UPDATED` を保存済み HTML より古くして `save` → 保存されず `/tmp` に出る / (8) `upgrade` 失敗 + 古い写しで `save` → 保存されない | GDR-META-042 | 1.1 | 未着手 |
+| 1.1 | `commands/gdr-lineage.md`・`commands/gdr-map.md`・`CLAUDE.md` のコマンド表（リポジトリ外配備） | GDR-META-042 | 0.2 | 完了 |
+| 1.2 | 05・06 §4 | GDR-META-042 | 0.2 | 完了 |
+| 1.3 | 確かめる（置き場と URL を変数にして使い捨ての場所で。導入先は使い捨ての git リポジトリ）: (1) 写しあり・`upgrade` なし → 取得しない / (2) 写しなし → 取得する / (3) 旧い版（例: `git show v2.7:docs/ja/01_GDR/tools/gdr_lineage_3d.py`）を置いて `upgrade` → `replaced` と前後の版 / (4) 取得失敗（URL を変えて再現）→ `failed` で写しが変わらない / (5) `upgrade save` → 取り直してから保存 / (6) 上流リポジトリ自身で `upgrade` → 取得しない / (7) 写しの `TOOL_UPDATED` を保存済み HTML より古くして `save` → 保存されず `/tmp` に出る / (8) `upgrade` 失敗 + 古い写しで `save` → 保存されない | GDR-META-042 | 1.1 | 完了 |
 | 2.1 | 版（MINOR v2.9）と CHANGELOG（互換性: **config を更新すると、`/gdr-lineage` は上流のツールの更新を自動では取り込まなくなる**（`upgrade` のときだけ）・保存の前に版を比べる・解釈版によらず適用。要約: `curl -z` は効いておらず毎回取得していた（v2.7 の「main の更新だけ取り直す」の訂正）。任意の移行: 更新後に 1 回 `upgrade`。スクリプトの `SPEC_VERSION`（v2.6）は据え置き）、`~/.claude/CLAUDE.md` §6 の現行版、タグ。完了の報告に「公開（push）すると、ほかのプロジェクトで `upgrade` で取り込める」と書く | GDR-META-042 | 1.1〜1.3 | 未着手 |
 
 ### 6.2. 進捗サマリー
@@ -152,5 +152,5 @@ flowchart TD
 | フェーズ | 状態 |
 |---|---|
 | 0 | 完了 |
-| 1 | 未着手 |
+| 1 | 完了 |
 | 2 | 未着手 |

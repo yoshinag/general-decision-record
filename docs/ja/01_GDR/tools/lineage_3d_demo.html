@@ -1,4 +1,4 @@
-<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:19:30+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
+<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:27:46+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -19,6 +19,12 @@
   select { width:100%; background:#1e293b; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px; }
   .row { display:flex; align-items:center; gap:6px; }
   .dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .badge { width:15px; height:15px; border-radius:50%; flex:none; display:inline-flex; align-items:center; justify-content:center;
+    font:700 9px/1 ui-monospace,Menlo,monospace; color:#0b0f19; box-sizing:border-box; }
+  .badge.wire { background:transparent !important; border:1.5px dashed; color:var(--fg); }
+  #marks { position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+  .mk { position:absolute; left:0; top:0; font:700 11px/1 ui-monospace,Menlo,monospace; color:#f8fafc; white-space:nowrap;
+    text-shadow:0 0 2px #000,0 0 2px #000,0 0 3px #000; will-change:transform; }
   .bar { width:18px; height:3px; flex:none; }
   .mut { color:var(--mut); font-size:12px; }
   .v { color:#fca5a5; cursor:pointer; font-size:12px; }
@@ -31,10 +37,13 @@
   #toc { top:12px; right:12px; width:340px; max-height:calc(100% - 24px); overflow:auto; }
   #toc h1 { font-size:14px; }
   #toc details { margin-top:8px; }
-  #toc summary { cursor:pointer; color:var(--mut); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #toc summary { cursor:pointer; color:var(--mut); font-size:12px; display:flex; gap:6px; align-items:baseline; }
+  #toc summary::before { content:'▸'; flex:none; } #toc details[open] > summary::before { content:'▾'; }
+  #toc summary .fn { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #toc summary .rd { flex:none; color:var(--acc); cursor:pointer; } #toc summary .rd:hover { text-decoration:underline; }
   #toc .ti { display:flex; gap:6px; align-items:baseline; padding:2px 4px; border-radius:4px; cursor:pointer; font-size:12px; }
   #toc .ti:hover { background:#1e293b; }
-  #toc .ti .dot { transform:translateY(1px); }
+  #toc .ti .badge { transform:translateY(2px); }
   #toc .ti .tid { color:var(--acc); flex:none; }
   #toc .ti .tt { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   #toc .ti.rel { opacity:.7; }
@@ -76,6 +85,7 @@
 </head>
 <body>
 <div id="graph"></div>
+<div id="marks"></div>
 
 <div id="hud" class="panel">
   <h1>GDR 系譜 3D</h1>
@@ -95,7 +105,8 @@
   <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>
   <label><input type="checkbox" id="showRel"> 弱い関連（relates-to）も描く</label>
   <label><input type="checkbox" id="hideIso"> 線のない GDR を隠す</label>
-  <h2>status</h2>
+  <button id="resetView" class="lnk" style="margin-top:6px">視点を戻す（時間軸を縦にした正面・全体）</button>
+  <h2>status（色と頭文字。失効は網目）</h2>
   <div id="legStatus"></div>
   <h2>リンク（矢印は子 → 親・新 → 旧）</h2>
   <div id="legLink"></div>
@@ -103,7 +114,7 @@
   <div id="viol"></div>
   <h2>読めなかったもの</h2>
   <div id="unread" class="mut"></div>
-  <div class="mut" style="margin-top:10px">左ドラッグ: 回転 / ホイール: ズーム / 右ドラッグ: 移動<br>クリック: 先祖と子孫を強調 / 背景クリック: 解除<br>右の目次（GDR を選んでいない間）: 表示中の GDR を文書ごとに並べる。クリックで選ぶ</div>
+  <div class="mut" style="margin-top:10px">左ドラッグ: 回転 / ホイール: ズーム / 右ドラッグ: 移動<br>クリック: 先祖と子孫を強調 / 背景クリック: 解除<br>視点を見失ったら「視点を戻す」<br>右の目次（GDR を選んでいない間）: 表示中の GDR を文書ごとに並べる。クリックで選ぶ</div>
 </div>
 
 <div id="detail" class="panel"><button id="close">×</button><div id="detailHead"></div>
@@ -118,14 +129,17 @@ const DATASETS = [{"name": "demo: 架空の GDR（系譜・前提・違反の見
 
 const STATUS = {
   // 色相は関係ビュー（06 §4）にそろえる。暗い背景なので明るさは上げている
-  Proposed:    { c:'#60a5fa', l:'Proposed（未確定）' },
-  Accepted:    { c:'#2dd4bf', l:'Accepted（合意済み）' },
-  Implemented: { c:'#22c55e', l:'Implemented' },
-  Superseded:  { c:'#9ca3af', l:'Superseded（失効）' },
-  Rejected:    { c:'#8b6b6b', l:'Rejected（失効。灰に赤み）' },
-  Unreadable:  { c:'#eab308', l:'status が読めない' },
-  Unknown:     { c:'#475569', l:'本文なし（集合の外・退避済み）' },
+  // k: 玉に重ねる頭文字（色だけに頼らない）。wire: 網目で描く（失効）
+  Proposed:    { c:'#60a5fa', k:'P', l:'Proposed（未確定）' },
+  Accepted:    { c:'#2dd4bf', k:'A', l:'Accepted（合意済み）' },
+  Implemented: { c:'#22c55e', k:'I', l:'Implemented' },
+  Superseded:  { c:'#9ca3af', k:'S', l:'Superseded（失効）', wire:true },
+  Rejected:    { c:'#8b6b6b', k:'R', l:'Rejected（失効。灰に赤み）', wire:true },
+  Unreadable:  { c:'#eab308', k:'?', l:'status が読めない' },
+  Unknown:     { c:'#475569', k:'', l:'本文なし（集合の外・退避済み）' },
 };
+const badge = st => { const s = STATUS[st] || { c:'#64748b', k:'' };
+  return `<span class="badge${s.wire ? ' wire' : ''}" style="background:${s.c};border-color:${s.c}">${esc(s.k)}</span>`; };
 const LINK = {
   'supersedes':   { c:'#f8fafc', l:'supersedes（新 → 旧）親子', lin:true },
   'refines':      { c:'#22d3ee', l:'refines（細分化 → 親）親子', lin:true },
@@ -137,8 +151,8 @@ const BAD = '#ef4444', DIM = '#1f2937';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const day = s => s ? s.slice(0,10) : '';
 
-document.getElementById('legStatus').innerHTML = Object.values(STATUS)
-  .map(s => `<div class="row"><span class="dot" style="background:${s.c}"></span>${s.l}</div>`).join('');
+document.getElementById('legStatus').innerHTML = Object.keys(STATUS)
+  .map(k => `<div class="row" style="margin:2px 0">${badge(k)}${STATUS[k].l}</div>`).join('');
 document.getElementById('legLink').innerHTML = Object.values(LINK)
   .map(s => `<div class="row"><span class="bar" style="background:${s.c};${s.c==='#1e293b'?'outline:1px solid #475569':''}"></span>${s.l}</div>`).join('')
   + `<div class="row"><span class="bar" style="background:${BAD}"></span>不変条件の違反（閉路・置換と派生の日時の逆転）</div>`;
@@ -153,6 +167,7 @@ if (typeof ForceGraph3D === 'undefined' || typeof marked === 'undefined' || type
 const Graph = ForceGraph3D()(document.getElementById('graph'))
   .backgroundColor('#0b0f19')
   .nodeRelSize(5)
+  .nodeResolution(12)
   .nodeVal(n => n.status === 'Unknown' ? 0.4 : seeds.has(n.id) ? 2.2 : 1)
   .nodeColor(n => (sel && !hl.nodes.has(n.id)) ? DIM : STATUS[n.status]?.c || '#64748b')
   .nodeLabel(n => `<div style="background:rgba(15,23,42,.95);padding:8px 10px;border:1px solid #475569;border-radius:6px;max-width:340px">
@@ -167,6 +182,52 @@ const Graph = ForceGraph3D()(document.getElementById('graph'))
   .linkDirectionalArrowRelPos(1)
   .onNodeClick(focusNode)
   .onBackgroundClick(clearSel);
+
+// 玉に重ねる status の頭文字（HTML を重ねる）と、失効の玉の網目。毎フレーム、表示中の GDR について合わせる
+const marksEl = document.getElementById('marks'), markOf = new Map();
+let markNodes = null;
+function tickMarks() {
+  requestAnimationFrame(tickMarks);
+  const nodes = Graph.graphData().nodes;
+  if (nodes !== markNodes) {
+    markNodes = nodes; const ids = new Set(nodes.map(n => n.id));
+    for (const [id, el] of markOf) if (!ids.has(id)) { el.remove(); markOf.delete(id); }
+    nodes.forEach(n => { const k = STATUS[n.status]?.k; if (!k || markOf.has(n.id)) return;
+      const el = document.createElement('span'); el.className = 'mk'; el.textContent = k; marksEl.append(el); markOf.set(n.id, el); });
+  }
+  // 画面への投影はカメラで直接行う（キャンバスの実寸に合わせる）
+  const cam = Graph.camera(), e = cam.matrixWorld.elements, p = cam.position, cv = Graph.renderer().domElement.getBoundingClientRect();
+  const fx = -e[8], fy = -e[9], fz = -e[10], unit = cv.height / 2 / Math.tan(cam.fov * Math.PI / 360);
+  const v = tickMarks.v || (tickMarks.v = cam.position.clone());
+  for (const n of nodes) {
+    // 失効の玉は網目にする（色が変わると描画側が材質を差し替えるので、そのたびに付け直す）
+    const o = n.__threeObj;
+    if (STATUS[n.status]?.wire && o?.material && !o.material.userData.gdrWire) {
+      const m = o.material.clone(); m.wireframe = true; m.userData.gdrWire = true; o.material = m; }
+    const el = markOf.get(n.id); if (!el) continue;
+    const dist = n.x == null ? 0 : (n.x - p.x) * fx + (n.y - p.y) * fy + (n.z - p.z) * fz;
+    if (dist <= 1) { el.style.display = 'none'; continue; }
+    v.set(n.x, n.y, n.z).project(cam);
+    const s = { x:cv.left + (v.x + 1) / 2 * cv.width, y:cv.top + (1 - v.y) / 2 * cv.height };
+    const r = 5 * Math.cbrt(Graph.nodeVal()(n)) * unit / dist;  // 玉の画面上の半径
+    const fsz = Math.max(9, Math.min(16, r * 1.1));
+    // 玉が小さいときは頭文字を玉の右に出す
+    const dx = r < 7 ? r + 2 : -fsz * 0.32;
+    el.style.display = ''; el.style.fontSize = fsz + 'px';
+    el.style.transform = `translate(${s.x + dx}px,${s.y - fsz * 0.5}px)`;
+    el.style.opacity = sel && !hl.nodes.has(n.id) ? 0.25 : 1;
+  }
+}
+
+// 視点を戻す: 時間軸（縦）を縦にした正面から、表示中の GDR 全体が収まる距離に置く
+function resetView(ms = 800) {
+  const b = Graph.getGraphBbox(); if (!b) return;
+  const c = { x:(b.x[0] + b.x[1]) / 2, y:(b.y[0] + b.y[1]) / 2, z:(b.z[0] + b.z[1]) / 2 };
+  const cam = Graph.camera(), t = Math.tan(cam.fov * Math.PI / 360);
+  const half = Math.max((b.y[1] - b.y[0]) / 2, (b.x[1] - b.x[0]) / 2 / cam.aspect) + 20;
+  cam.up.set(0, 1, 0);
+  Graph.cameraPosition({ x:c.x, y:c.y, z:c.z + (b.z[1] - b.z[0]) / 2 + half / t }, c, ms);
+}
 
 const sid = x => typeof x === 'object' ? x.id : x;
 const scopesOf = n => String(n.scope || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -252,10 +313,11 @@ function renderToc(nodes, fs, fp, fw, fst) {
   document.getElementById('tocInfo').innerHTML = esc(cond ? `${cond} の表示中 ${nReal} 件` : `表示中 ${nReal} 件（絞り込みなし）`)
     + (seeds.size ? '<br>太字: 当てはまる GDR / 薄字: たどった関連' : '') + (nodes.length ? '' : '<br>表示中の GDR はありません');
   const item = n => `<div class="ti${seeds.size ? (seeds.has(n.id) ? ' seed' : ' rel') : ''}" data-id="${esc(n.id)}" title="${esc(n.id + ': ' + n.title + '（' + n.status + '）')}">`
-    + `<span class="dot" style="background:${STATUS[n.status]?.c || '#64748b'}"></span><span class="tid">${esc(n.id)}</span>`
+    + `${badge(n.status)}<span class="tid">${esc(n.id)}</span>`
     + `<span class="tt">${esc(String(n.title || '').replace(/\*\*|`/g, ''))}</span></div>`;
   document.getElementById('tocBody').innerHTML = keys.map(k => { const g = groups.get(k);
-    return `<details open><summary title="${esc(k)}">${esc(k || '本文なし（集合の外・退避済み）')}（${g.length}）</summary>${g.map(item).join('')}</details>`; }).join('');
+    const read = k && cur.files?.[k] != null ? `<span class="rd" data-file="${esc(k)}" title="文書全体を読む（GDR 以外の節も）">文書を読む</span>` : '';
+    return `<details open><summary title="${esc(k)}"><span class="fn">${esc(k || '本文なし（集合の外・退避済み）')}（${g.length}）</span>${read}</summary>${g.map(item).join('')}</details>`; }).join('');
   document.getElementById('toc').style.display = sel ? 'none' : '';
 }
 
@@ -400,7 +462,7 @@ function openReader(file, id) {
   renderMd(body, src);
   document.getElementById('reader').style.display = 'flex';
   // 対象の GDR の始まり（**GDR-…: …** の段落か ## GDR-…: の見出し）を探して強調・スクロール
-  const p = [...body.querySelectorAll('p, h1, h2, h3, h4, h5, h6')].find(p => (p.tagName !== 'P' || p.firstElementChild?.tagName === 'STRONG') && p.textContent.trim().startsWith(id + ':'));
+  const p = [...body.querySelectorAll('p, h1, h2, h3, h4, h5, h6')].find(p => (p.tagName !== 'P' || p.firstElementChild?.tagName === 'STRONG') && id && p.textContent.trim().startsWith(id + ':'));
   if (p) { p.classList.add('here'); requestAnimationFrame(() => p.scrollIntoView({ block:'start' })); } else body.scrollTop = 0;
 }
 function closeReader() { document.getElementById('reader').style.display = 'none'; }
@@ -411,10 +473,15 @@ document.querySelectorAll('.tabs b').forEach(b => b.onclick = () => {
   document.getElementById('tabMd').style.display = b.dataset.tab === 'md' ? '' : 'none';
   document.getElementById('tabLin').style.display = b.dataset.tab === 'lin' ? '' : 'none';
 });
+// 目次の「文書を読む」: GDR を選ばずに文書全体を開く（details の開閉はしない）
+document.getElementById('tocBody').addEventListener('click', e => { const f = e.target.closest?.('[data-file]')?.dataset.file;
+  if (f == null) return; e.preventDefault(); openReader(f, null); });
 document.addEventListener('click', e => { const id = e.target.closest?.('[data-id]')?.dataset.id; if (!id) return;
   const n = Graph.graphData().nodes.find(n => n.id === id) || cur.nodes.find(n => n.id === id);
   if (!n) return; closeReader(); focusNode(n); });
 document.getElementById('close').onclick = clearSel;
+document.getElementById('resetView').onclick = () => resetView();
+requestAnimationFrame(tickMarks);
 let wordTimer; document.getElementById('fWord').oninput = () => { clearTimeout(wordTimer); wordTimer = setTimeout(() => { clearSel(); render(); }, 250); };
 ['showDep','showRel','hideIso','fScope','fPrefix','fStatus','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');

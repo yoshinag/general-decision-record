@@ -8,6 +8,20 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.8 — 2026-11-26
+
+- **互換性:** MINOR（任意のコマンド `/gdr-lineage` に `save` を足し、06 §4 の「生成した HTML はコミットしない」を「`save` のとき以外はコミットしない」に改めた。GDR の書式・status 値・規則は変わらない。必須の移行なし）。**解釈版によらず適用**する。**user-level config を更新すると、`/gdr-lineage save` が生成した HTML を `notes/tools/gdr_lineage.html` に保存してコミットするようになる**（`save` を付けなければ従来どおりリポジトリの外に出してコミットしない）
+- **要約:**
+  - **`/gdr-lineage save`（共有のため）:** 読む範囲に未コミット・追跡外・`.gitignore` した Markdown が無いときだけ `notes/tools/gdr_lineage.html` に生成し、文書が変わっていれば（ヘッダ行と対応するコミットを除いて比べる）HTML だけをパスを指定して 1 コミットする。当たったときは保存せずリポジトリの外の HTML を使う。GDR-META-026 の「生成物の永続化は明示指定時のみ」に従う形で、`/gdr-map save` と同じ（[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)、[06 §4](docs/ja/01_GDR/guide/06_VISUALIZATION_GUIDE.md)）
+  - **出力先を戻す:** `save` なしの出力はリポジトリの外（v2.7 の直後に一時 `.gitignore` した `notes/tools/` に出していたのを戻す）
+  - ツール側の変更（版の対象外。記録のため）: 3D の系譜ビューアに、GDR を選んでいない間の目次（右ペイン）、検索ワード・status の絞り込み、選んだ GDR の絞り込みの外にある関連の一時表示を追加。scope・PREFIX の既定をリストの 1 番目にした
+  - 根拠: [kaizen 016](docs/ja/91_demo_buildup_documents.md/kaizen/16_系譜ビューアの生成物のコミット提案.md)（GDR-META-041。GDR-META-040 の 2 つの文を `refines` で改め、040 に注記）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: なし
+  - 任意: `commands/gdr-lineage.md` を更新する（`commands/gdr-map.md` の「3D」も `save` を渡す）。旧い `/gdr-lineage` が作った `notes/tools/.gitignore` は、`save` の初回に外れる
+- **user-level config:** 更新必要 — `CLAUDE.md`（コマンド表の `/gdr-lineage`・現行版 v2.8）、`commands/gdr-lineage.md`（`save`・出力先・`status=` / `q=`）、`commands/gdr-map.md`（「3D」で `save` を渡す）
+
 ## v2.7 — 2026-11-26
 
 - **互換性:** MINOR（user-level config に任意のコマンドを足しただけ。GDR の書式・status 値・規則は変わらない。必須の移行なし）

@@ -31,6 +31,10 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
   - 画面で scope / PREFIX を選ぶと、当てはまる GDR と、そこから表示中のリンクを指定の段数（1 段・2 段・すべて）
     たどった GDR だけを描く。表示数の上限も選べる（既定 50。超えたら、絞り込み中は当てはまる GDR → 近い段の順、
     絞り込みなしは日時の新しい順に残す）。URL の `#0?scope=arch&prefix=ARCH&depth=1&limit=50` でも指定できる
+  - 検索ワード（空白区切りで AND。GDR ID・要約・scope・本文を大文字小文字を区別せずに探す）も絞り込みに使える。scope / PREFIX と
+    併せると、すべてに当てはまる GDR が起点になる。URL では `q=`
+  - GDR を選んでいない間は、右に目次を出す（表示中の GDR を文書ごとに並べる。絞り込み・段数・上限・線のない GDR を隠す、に従う。
+    絞り込み中は当てはまる GDR を太字、たどった関連を薄字にする）。項目をクリックするとその GDR を選ぶ
 
 表示には CDN（3d-force-graph / marked / DOMPurify。版を固定し SRI 付き）を使うので、開くときにネット接続が要る。
 対応するブラウザは Chrome だけ（ほかのブラウザでの表示は確かめず、合わせない）。
@@ -495,6 +499,7 @@ TEMPLATE = r'''<!DOCTYPE html>
   h1 { margin:0 0 6px; font-size:15px; color:var(--acc); }
   h2 { margin:12px 0 4px; font-size:12px; color:var(--mut); font-weight:600; }
   label { display:block; cursor:pointer; }
+  input[type=search] { width:100%; box-sizing:border-box; background:#1e293b; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:4px 6px; font:inherit; }
   select { width:100%; background:#1e293b; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px; }
   .row { display:flex; align-items:center; gap:6px; }
   .dot { width:10px; height:10px; border-radius:50%; flex:none; }
@@ -507,6 +512,17 @@ TEMPLATE = r'''<!DOCTYPE html>
   .id:hover { text-decoration:underline; }
   button { background:#1e293b; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:2px 8px; cursor:pointer; float:right; }
   #detail { width:420px; }
+  #toc { top:12px; right:12px; width:340px; max-height:calc(100% - 24px); overflow:auto; }
+  #toc h1 { font-size:14px; }
+  #toc details { margin-top:8px; }
+  #toc summary { cursor:pointer; color:var(--mut); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #toc .ti { display:flex; gap:6px; align-items:baseline; padding:2px 4px; border-radius:4px; cursor:pointer; font-size:12px; }
+  #toc .ti:hover { background:#1e293b; }
+  #toc .ti .dot { transform:translateY(1px); }
+  #toc .ti .tid { color:var(--acc); flex:none; }
+  #toc .ti .tt { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  #toc .ti.rel { opacity:.7; }
+  #toc .ti.seed .tt { font-weight:600; }
   .tabs { display:flex; gap:4px; margin:8px 0 6px; border-bottom:1px solid var(--line); }
   .tabs b { padding:4px 10px; cursor:pointer; color:var(--mut); font-weight:500; border-bottom:2px solid transparent; }
   .tabs b.on { color:var(--fg); border-color:var(--acc); }
@@ -535,7 +551,7 @@ TEMPLATE = r'''<!DOCTYPE html>
   #readerBody { overflow:auto; padding:16px 24px 40px; }
   button.lnk { float:none; margin-top:8px; }
   @media (max-width:700px) { #reader { inset:8px; } }
-  @media (max-width:700px){ #hud{ width:calc(100% - 52px); max-height:40%; } #detail{ top:auto; bottom:12px; left:12px; width:auto; max-height:45%; } }
+  @media (max-width:700px){ #hud{ width:calc(100% - 52px); max-height:40%; } #detail,#toc{ top:auto; bottom:12px; left:12px; width:auto; max-height:45%; } }
 </style>
 <!-- 版を上げたら integrity を計算しなおす（CDN と npm のパッケージの両方で突き合わせる） -->
 <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.1/dist/3d-force-graph.min.js" integrity="sha384-i98VDQKdpyVrtyuFn0fjUWJBLBmxnqHqOANcvYe9HLJUgT2wPixa4ZkLd7Dh3VEk" crossorigin="anonymous"></script>
@@ -551,7 +567,8 @@ TEMPLATE = r'''<!DOCTYPE html>
   <h2>データ</h2>
   <select id="ds"></select>
   <div id="stats" class="mut" style="margin-top:4px"></div>
-  <h2>絞り込み（scope / PREFIX）</h2>
+  <h2>絞り込み（検索ワード / scope / PREFIX）</h2>
+  <input id="fWord" type="search" placeholder="検索ワード（ID・要約・scope・本文。空白区切りで AND）" style="margin-bottom:4px">
   <select id="fScope"></select>
   <select id="fPrefix" style="margin-top:4px"></select>
   <label class="row" style="margin-top:4px">関連の段数 <select id="fDepth" style="width:auto"><option value="1">1 段</option><option value="2">2 段</option><option value="all" selected>すべて</option></select></label>
@@ -569,13 +586,14 @@ TEMPLATE = r'''<!DOCTYPE html>
   <div id="viol"></div>
   <h2>読めなかったもの</h2>
   <div id="unread" class="mut"></div>
-  <div class="mut" style="margin-top:10px">左ドラッグ: 回転 / ホイール: ズーム / 右ドラッグ: 移動<br>クリック: 先祖と子孫を強調 / 背景クリック: 解除</div>
+  <div class="mut" style="margin-top:10px">左ドラッグ: 回転 / ホイール: ズーム / 右ドラッグ: 移動<br>クリック: 先祖と子孫を強調 / 背景クリック: 解除<br>右の目次（GDR を選んでいない間）: 表示中の GDR を文書ごとに並べる。クリックで選ぶ</div>
 </div>
 
 <div id="detail" class="panel"><button id="close">×</button><div id="detailHead"></div>
   <div class="tabs"><b data-tab="md" class="on">GDR 本文</b><b data-tab="lin">系譜</b></div>
   <div id="tabMd" class="md"></div><div id="tabLin" style="display:none"></div>
   <button id="openDoc" class="lnk">元の文書を読む</button></div>
+<div id="toc" class="panel"><h1>目次</h1><div id="tocInfo" class="mut"></div><div id="tocBody"></div></div>
 <div id="reader" class="panel"><header><span id="readerTitle"></span><button id="readerClose">閉じる（Esc）</button></header><div id="readerBody" class="md"></div></div>
 
 <script>
@@ -654,12 +672,14 @@ function render() {
     .map(l => ({ ...l, source: l.target, target: l.source }));
   // scope / PREFIX の絞り込み: 当てはまる GDR から、表示中のリンクを向きを問わず指定の段数たどる
   const fs = document.getElementById('fScope').value, fp = document.getElementById('fPrefix').value;
+  const fw = document.getElementById('fWord').value.trim(), words = fw.toLowerCase().split(/\s+/).filter(Boolean);
+  const hit = n => { const t = [n.id, n.title, n.scope, n.md].join('\n').toLowerCase(); return words.every(w => t.includes(w)); };
   const dv = document.getElementById('fDepth').value, depth = dv === 'all' ? Infinity : +dv;
   const lv = document.getElementById('fLimit').value, limit = lv === 'all' ? Infinity : +lv;
   let nodes = cur.nodes, order = null;
   seeds = new Set();
-  if (fs || fp) {
-    seeds = new Set(cur.nodes.filter(n => n.status !== 'Unknown' && (!fs || scopesOf(n).includes(fs)) && (!fp || prefixOf(n.id) === fp)).map(n => n.id));
+  if (fs || fp || words.length) {
+    seeds = new Set(cur.nodes.filter(n => n.status !== 'Unknown' && (!fs || scopesOf(n).includes(fs)) && (!fp || prefixOf(n.id) === fp) && hit(n)).map(n => n.id));
     const adj = {}; links.forEach(l => { (adj[l.source] ||= []).push(l.target); (adj[l.target] ||= []).push(l.source); });
     const keep = new Set(seeds); let front = [...seeds]; order = [...seeds];
     for (let d = 0; d < depth && front.length; d++) {
@@ -683,6 +703,26 @@ function render() {
   const used = new Set(links.flatMap(l => [l.source, l.target]));
   if (hideIso) nodes = nodes.filter(n => used.has(n.id));
   Graph.graphData({ nodes, links });
+  renderToc(nodes, fs, fp, fw);
+}
+
+// 目次: 表示中の GDR（絞り込み・段数・上限・線のない GDR を隠す、を反映）を文書ごとに並べる。GDR を選んでいない間だけ右に出す
+function renderToc(nodes, fs, fp, fw) {
+  const pos = new Map(cur.nodes.map((n, i) => [n.id, i]));
+  const groups = new Map();
+  [...nodes].sort((a, b) => pos.get(a.id) - pos.get(b.id)).forEach(n => {
+    const k = n.status === 'Unknown' || !n.file ? '' : n.file; (groups.get(k) || groups.set(k, []).get(k)).push(n); });
+  const keys = [...groups.keys()].filter(k => k).sort().concat(groups.has('') ? [''] : []);
+  const cond = [fw && `「${fw}」`, fs && 'scope: ' + fs, fp && 'PREFIX: ' + fp].filter(Boolean).join(' / ');
+  const nReal = nodes.filter(n => n.status !== 'Unknown').length;
+  document.getElementById('tocInfo').innerHTML = esc(cond ? `${cond} の表示中 ${nReal} 件` : `表示中 ${nReal} 件（絞り込みなし）`)
+    + (cond ? '<br>太字: 当てはまる GDR / 薄字: たどった関連' : '') + (nodes.length ? '' : '<br>表示中の GDR はありません');
+  const item = n => `<div class="ti${seeds.size ? (seeds.has(n.id) ? ' seed' : ' rel') : ''}" data-id="${esc(n.id)}" title="${esc(n.id + ': ' + n.title + '（' + n.status + '）')}">`
+    + `<span class="dot" style="background:${STATUS[n.status]?.c || '#64748b'}"></span><span class="tid">${esc(n.id)}</span>`
+    + `<span class="tt">${esc(String(n.title || '').replace(/\*\*|`/g, ''))}</span></div>`;
+  document.getElementById('tocBody').innerHTML = keys.map(k => { const g = groups.get(k);
+    return `<details open><summary title="${esc(k)}">${esc(k || '本文なし（集合の外・退避済み）')}（${g.length}）</summary>${g.map(item).join('')}</details>`; }).join('');
+  document.getElementById('toc').style.display = sel ? 'none' : '';
 }
 
 function fillFilters() {
@@ -695,6 +735,7 @@ function fillFilters() {
 
 function loadDataset(i, f) {
   cur = DATASETS[i]; clearSel(); fillFilters();
+  document.getElementById('fWord').value = f?.get('q') || '';
   if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
   const s = cur.stats, ec = s.edgeCounts;
@@ -761,12 +802,13 @@ ${pre.length ? pre.join('\n') : '  なし'}
 被前提:
 ${preOf.length ? preOf.join('\n') : '  なし'}</pre>`;
   document.getElementById('detail').style.display = 'block';
+  document.getElementById('toc').style.display = 'none';
   refresh();
   const d = 90, r = 1 + d / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
   Graph.cameraPosition({ x:node.x * r, y:node.y * r, z:node.z * r }, node, 900);
 }
 function clearSel() { sel = null; hl = { nodes:new Set(), links:new Set() };
-  document.getElementById('detail').style.display = 'none'; refresh(); }
+  document.getElementById('detail').style.display = 'none'; document.getElementById('toc').style.display = ''; refresh(); }
 function refresh() { Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()); }
 
 const ID_RE = /GDR-[A-Z][A-Z0-9]*-\d{3,}/g;
@@ -814,16 +856,17 @@ document.querySelectorAll('.tabs b').forEach(b => b.onclick = () => {
   document.getElementById('tabMd').style.display = b.dataset.tab === 'md' ? '' : 'none';
   document.getElementById('tabLin').style.display = b.dataset.tab === 'lin' ? '' : 'none';
 });
-document.addEventListener('click', e => { const id = e.target.dataset?.id; if (!id) return;
+document.addEventListener('click', e => { const id = e.target.closest?.('[data-id]')?.dataset.id; if (!id) return;
   const n = Graph.graphData().nodes.find(n => n.id === id) || cur.nodes.find(n => n.id === id);
   if (!n) return; closeReader(); focusNode(n); });
 document.getElementById('close').onclick = clearSel;
+let wordTimer; document.getElementById('fWord').oninput = () => { clearTimeout(wordTimer); wordTimer = setTimeout(() => { clearSel(); render(); }, 250); };
 ['showDep','showRel','hideIso','fScope','fPrefix','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');
 dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
-// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? scope=…&prefix=…&depth=1|2|all&limit=20|50|100|200。
+// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? q=…&scope=…&prefix=…&depth=1|2|all&limit=20|50|100|200。
 // 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1、#0?limit=50）
 let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const [hPath, hQs] = hash.split('?');

@@ -33,6 +33,7 @@
   - [14. レビューの上位モデル委任と反映のワンセット化提案](91_demo_buildup_documents.md/kaizen/14_レビューの上位モデル委任と反映のワンセット化提案.md)
   - [15. GDR の系譜の明確化と UUID v7 の検討提案](91_demo_buildup_documents.md/kaizen/15_GDRの系譜の明確化とUUIDv7の検討提案.md)
   - [16. 系譜ビューアの生成物のコミット提案](91_demo_buildup_documents.md/kaizen/16_系譜ビューアの生成物のコミット提案.md)
+  - [17. 系譜ビューアの取得を upgrade に限る提案](91_demo_buildup_documents.md/kaizen/17_系譜ビューアの取得をupgradeに限る提案.md)
 
 <div style="margin-top: 1.5em; padding-left: 15px;">
   <a href="https://github.com/sponsors/yoshinag" target="_blank" rel="noopener">

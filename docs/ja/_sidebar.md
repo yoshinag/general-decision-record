@@ -31,6 +31,7 @@
   - [12. AIへの野心度を上げる指針の導入提案](91_demo_buildup_documents.md/kaizen/12_AIへの野心度を上げる指針の導入提案.md)
   - [13. GDR 置換時の波及チェック提案](91_demo_buildup_documents.md/kaizen/13_GDR置換時の波及チェック提案.md)
   - [14. レビューの上位モデル委任と反映のワンセット化提案](91_demo_buildup_documents.md/kaizen/14_レビューの上位モデル委任と反映のワンセット化提案.md)
+  - [15. GDR の系譜の明確化と UUID v7 の検討提案](91_demo_buildup_documents.md/kaizen/15_GDRの系譜の明確化とUUIDv7の検討提案.md)
 
 <div style="margin-top: 1.5em; padding-left: 15px;">
   <a href="https://github.com/sponsors/yoshinag" target="_blank" rel="noopener">

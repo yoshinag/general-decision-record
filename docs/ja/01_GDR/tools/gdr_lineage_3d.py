@@ -3,7 +3,9 @@
 
 系譜の定義は上流（general-decision-record リポジトリ）の GDR 仕様 01 §3.1「系譜（先祖・子孫）の規則」。
 この版が前提にする GDR 仕様: v2.6（SPEC_VERSION）。上流の docs/ja/01_GDR/tools/ に置く任意の補助ツールで、
-GDR 仕様の版の対象外（取得リストに入れない。要る導入先がタグを指定して取得し、_reference/ には入れない）。
+GDR 仕様の版の対象外（取得リストに入れない。要る導入先が main の最新を取得し、この SPEC_VERSION と TOOL_UPDATED で
+対応する版と更新日を確かめる。_reference/ には入れない）。取得の例:
+  curl -fsSL https://raw.githubusercontent.com/yoshinag/general-decision-record/main/docs/ja/01_GDR/tools/gdr_lineage_3d.py -o ~/.local/share/gdr/gdr_lineage_3d.py
 
 使い方:
   python3 gdr_lineage_3d.py [ディレクトリ ...] [-o lineage_3d.html] [--demo]

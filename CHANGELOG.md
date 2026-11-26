@@ -21,7 +21,7 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 - **導入先の移行項目:**
   - 必須: なし
   - 推奨: user-level config を更新する（`CLAUDE.md`・`commands/gdr-kaizen.md`・`commands/gdr-flow.md`・`commands/gdr-map.md`・`agents/gdr-reviewer.md`）。更新後に `系譜`（引数なし）で不変条件の違反を一度確かめる
-  - 任意: `_reference/` の 01・02・04・06・T2 を v2.6 で取り直す。既存の GDR に親や `uid` を遡って書く（軽微な追記）。3D の系譜ビューアを使うなら `tools/` からタグを指定して取得し、リポジトリの外で実行する
+  - 任意: `_reference/` の 01・02・04・06・T2 を v2.6 で取り直す。既存の GDR に親や `uid` を遡って書く（軽微な追記）。3D の系譜ビューアを使うなら `tools/` から取得し、リポジトリの外で実行する（発行後の訂正: 取得はタグではなく main の最新。ツールは版の対象外で、冒頭の `SPEC_VERSION` と更新日で確かめる。06 §4）
 - **user-level config:** 更新必要 — `CLAUDE.md`（不可侵ルールに系譜と `uid`・現行版 v2.6）、`commands/gdr-kaizen.md`・`commands/gdr-flow.md`（起票時に親・日時・`uid`。GDR 起票では `uid` を写す）、`commands/gdr-map.md`（`系譜` / `前提`）、`agents/gdr-reviewer.md`（親の記入漏れ・型の選び方・`uid` の確認）
 
 ## v2.5 — 2026-11-26

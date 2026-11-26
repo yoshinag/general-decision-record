@@ -1,4 +1,4 @@
-<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T14:25:33+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
+<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T14:41:47+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -71,6 +71,11 @@
   <h2>データ</h2>
   <select id="ds"></select>
   <div id="stats" class="mut" style="margin-top:4px"></div>
+  <h2>絞り込み（scope / PREFIX）</h2>
+  <select id="fScope"></select>
+  <select id="fPrefix" style="margin-top:4px"></select>
+  <label class="row" style="margin-top:4px">関連の段数 <select id="fDepth" style="width:auto"><option value="1">1 段</option><option value="2">2 段</option><option value="all" selected>すべて</option></select></label>
+  <div id="fInfo" class="mut"></div>
   <h2>表示</h2>
   <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>
   <label><input type="checkbox" id="showRel"> 弱い関連（relates-to）も描く</label>
@@ -122,7 +127,7 @@ document.getElementById('legLink').innerHTML = Object.values(LINK)
   .map(s => `<div class="row"><span class="bar" style="background:${s.c};${s.c==='#1e293b'?'outline:1px solid #475569':''}"></span>${s.l}</div>`).join('')
   + `<div class="row"><span class="bar" style="background:${BAD}"></span>不変条件の違反（閉路・置換と派生の日時の逆転）</div>`;
 
-let cur, sel = null, hl = { nodes:new Set(), links:new Set() };
+let cur, sel = null, hl = { nodes:new Set(), links:new Set() }, seeds = new Set();
 
 if (typeof ForceGraph3D === 'undefined' || typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
   document.getElementById('stats').textContent = 'CDN からライブラリを読み込めませんでした（オフライン、または integrity の不一致）。';
@@ -131,7 +136,7 @@ if (typeof ForceGraph3D === 'undefined' || typeof marked === 'undefined' || type
 const Graph = ForceGraph3D()(document.getElementById('graph'))
   .backgroundColor('#0b0f19')
   .nodeRelSize(5)
-  .nodeVal(n => n.status === 'Unknown' ? 0.4 : 1)
+  .nodeVal(n => n.status === 'Unknown' ? 0.4 : seeds.has(n.id) ? 2.2 : 1)
   .nodeColor(n => (sel && !hl.nodes.has(n.id)) ? DIM : STATUS[n.status]?.c || '#64748b')
   .nodeLabel(n => `<div style="background:rgba(15,23,42,.95);padding:8px 10px;border:1px solid #475569;border-radius:6px;max-width:340px">
       <div style="color:#38bdf8;font-size:11px">${esc(n.id)} · ${esc(n.scope)}</div>
@@ -147,6 +152,8 @@ const Graph = ForceGraph3D()(document.getElementById('graph'))
   .onBackgroundClick(clearSel);
 
 const sid = x => typeof x === 'object' ? x.id : x;
+const scopesOf = n => String(n.scope || '').split(',').map(x => x.trim()).filter(Boolean);
+const prefixOf = id => (/^GDR-([A-Z][A-Z0-9]*)-/.exec(id) || [])[1] || '';
 const dateLabel = n => n.date ? day(n.date) : n.uidDate ? day(n.uidDate) + '（uid の時刻。位置だけ）' : n.estDate ? day(n.estDate) + '（推定: ファイル追加日。位置だけ）' : '日時なし';
 
 function placeY(ds) {
@@ -162,15 +169,40 @@ function render() {
   const showDep = document.getElementById('showDep').checked;
   const showRel = document.getElementById('showRel').checked;
   const hideIso = document.getElementById('hideIso').checked;
-  const links = cur.links.filter(l => LINK[l.type].lin || (l.type === 'depends-on' && showDep) || (l.type === 'relates-to' && showRel))
+  let links = cur.links.filter(l => LINK[l.type].lin || (l.type === 'depends-on' && showDep) || (l.type === 'relates-to' && showRel))
     .map(l => ({ ...l, source: l.target, target: l.source }));
+  // scope / PREFIX の絞り込み: 当てはまる GDR から、表示中のリンクを向きを問わず指定の段数たどる
+  const fs = document.getElementById('fScope').value, fp = document.getElementById('fPrefix').value;
+  const dv = document.getElementById('fDepth').value, depth = dv === 'all' ? Infinity : +dv;
+  let nodes = cur.nodes;
+  seeds = new Set();
+  if (fs || fp) {
+    seeds = new Set(cur.nodes.filter(n => n.status !== 'Unknown' && (!fs || scopesOf(n).includes(fs)) && (!fp || prefixOf(n.id) === fp)).map(n => n.id));
+    const adj = {}; links.forEach(l => { (adj[l.source] ||= []).push(l.target); (adj[l.target] ||= []).push(l.source); });
+    const keep = new Set(seeds); let front = [...seeds];
+    for (let d = 0; d < depth && front.length; d++) {
+      const next = []; front.forEach(id => (adj[id] || []).forEach(v => { if (!keep.has(v)) { keep.add(v); next.push(v); } })); front = next;
+    }
+    nodes = cur.nodes.filter(n => keep.has(n.id));
+    links = links.filter(l => keep.has(l.source) && keep.has(l.target));
+    document.getElementById('fInfo').textContent = `当てはまる GDR ${seeds.size} 件（大きい点）＋ 関連 ${keep.size - seeds.size} 件`;
+  } else document.getElementById('fInfo').textContent = '';
   const used = new Set(links.flatMap(l => [l.source, l.target]));
-  const nodes = hideIso ? cur.nodes.filter(n => used.has(n.id)) : cur.nodes;
+  if (hideIso) nodes = nodes.filter(n => used.has(n.id));
   Graph.graphData({ nodes, links });
 }
 
-function loadDataset(i) {
-  cur = DATASETS[i]; clearSel();
+function fillFilters() {
+  const opt = (v, l) => `<option value="${esc(v)}">${esc(l)}</option>`;
+  const real = cur.nodes.filter(n => n.status !== 'Unknown');
+  const sc = [...new Set(real.flatMap(scopesOf))].sort(), px = [...new Set(real.map(n => prefixOf(n.id)).filter(Boolean))].sort();
+  document.getElementById('fScope').innerHTML = opt('', 'scope: すべて') + sc.map(v => opt(v, 'scope: ' + v)).join('');
+  document.getElementById('fPrefix').innerHTML = opt('', 'PREFIX: すべて') + px.map(v => opt(v, 'PREFIX: ' + v)).join('');
+}
+
+function loadDataset(i, f) {
+  cur = DATASETS[i]; clearSel(); fillFilters();
+  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
   const s = cur.stats, ec = s.edgeCounts;
   const lin = (ec['supersedes']||0) + (ec['refines']||0) + (ec['derived-from']||0);
@@ -293,16 +325,19 @@ document.addEventListener('click', e => { const id = e.target.dataset?.id; if (!
   const n = Graph.graphData().nodes.find(n => n.id === id) || cur.nodes.find(n => n.id === id);
   if (!n) return; closeReader(); focusNode(n); });
 document.getElementById('close').onclick = clearSel;
-['showDep','showRel','hideIso'].forEach(id => document.getElementById(id).onchange = render);
+['showDep','showRel','hideIso','fScope','fPrefix','fDepth'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');
 dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
-// URL の # で開く GDR を指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc。例: #1/GDR-META-040、#0/GDR-ARCH-012/doc）
+// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? scope=…&prefix=…&depth=1|2|all。
+// 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1）
 let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
-const [hDs, hId, hDoc] = hash.split('/');
+const [hPath, hQs] = hash.split('?');
+const [hDs, hId, hDoc] = hPath.split('/');
+const hFilter = new URLSearchParams(hQs || '');
 const hIdx = /^\d+$/.test(hDs || '') && +hDs < DATASETS.length ? +hDs : 0;
-dsSel.value = hIdx; loadDataset(hIdx);
+dsSel.value = hIdx; loadDataset(hIdx, hFilter);
 if (hId) setTimeout(() => { const n = cur.nodes.find(n => n.id === hId); if (!n) return;
   focusNode(n); if (hDoc === 'doc' && n.file) openReader(n.file, n.id); }, 2500);
 </script>

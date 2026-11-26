@@ -71,7 +71,7 @@ flowchart LR
 - 課題ノード（`§N-M`）は `derived-from` の参照先として必要なときだけ描く
 - status の意味・遷移は [GDR 仕様 §3](/01_GDR/01_GENERAL_DECISION_RECORD.md#3-書式) を参照。却下した案の再提案は `supersedes` ではなく `derived-from` で描く
 - **系譜の絞り込み:** `系譜` 指定でエッジを親子の 3 種（`supersedes` / `refines` / GDR 向き `derived-from`）に絞り、`flowchart BT` で描く（矢印とラベルは変えず、親が上に並ぶ）。`前提` を添えると `depends-on` を点線で足す。親子と前提の定義は [01 §3.1](/01_GDR/01_GENERAL_DECISION_RECORD.md#31-任意フィールド) の系譜（経緯: [015 提案](/91_demo_buildup_documents.md/kaizen/15_GDRの系譜の明確化とUUIDv7の検討提案.md) GDR-META-040）
-- **3D の系譜ビューア（任意の補助ツール）:** [`tools/gdr_lineage_3d.py`](/01_GDR/tools/gdr_lineage_3d.py ':ignore') は、GDR の Markdown を読み、親子・前提・不変条件の違反と `uid` の警告を 3D で俯瞰する単一の HTML を生成する（[見本](/01_GDR/tools/lineage_3d_demo.html ':ignore')。架空の GDR）。Python 3.7 以上の標準ライブラリだけで動き、表示には CDN のライブラリ（版の固定・SRI 付き）を使う。対応するブラウザは Chrome だけ。既定の可視化（Mermaid・生成物を永続化しない）は変えない。GDR 仕様の版の対象外で、導入時の取得リストに入れない。使う導入先はタグを指定して取得し、リポジトリの外（または `.gitignore` した場所）で実行する。`_reference/` には入れず、生成した HTML はコミットしない。使い方と確かめ方はスクリプトの冒頭にある
+- **3D の系譜ビューア（任意の補助ツール）:** [`tools/gdr_lineage_3d.py`](/01_GDR/tools/gdr_lineage_3d.py ':ignore') は、GDR の Markdown を読み、親子・前提・不変条件の違反と `uid` の警告を 3D で俯瞰する単一の HTML を生成する（[見本](/01_GDR/tools/lineage_3d_demo.html ':ignore')。架空の GDR）。Python 3.7 以上の標準ライブラリだけで動き、表示には CDN のライブラリ（版の固定・SRI 付き）を使う。対応するブラウザは Chrome だけ。画面で scope / PREFIX を選び、当てはまる GDR とその関連（段数は 1 段・2 段・すべて）だけに絞って描ける。既定の可視化（Mermaid・生成物を永続化しない）は変えない。GDR 仕様の版の対象外で、導入時の取得リストに入れない。使う導入先はタグを指定して取得し、リポジトリの外（または `.gitignore` した場所）で実行する。`_reference/` には入れず、生成した HTML はコミットしない。使い方と確かめ方はスクリプトの冒頭にある
 
 ## 5. 生成手順
 

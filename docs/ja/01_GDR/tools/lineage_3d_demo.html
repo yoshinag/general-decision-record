@@ -1,4 +1,4 @@
-<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:27:46+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
+<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:30:26+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -105,6 +105,7 @@
   <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>
   <label><input type="checkbox" id="showRel"> 弱い関連（relates-to）も描く</label>
   <label><input type="checkbox" id="hideIso"> 線のない GDR を隠す</label>
+  <label class="row" style="margin-top:4px">描き方 <select id="fView" style="width:auto"><option value="3d" selected>3D</option><option value="2d">2D（時系列の平面。回転なし）</option></select></label>
   <button id="resetView" class="lnk" style="margin-top:6px">視点を戻す（時間軸を縦にした正面・全体）</button>
   <h2>status（色と頭文字。失効は網目）</h2>
   <div id="legStatus"></div>
@@ -205,9 +206,10 @@ function tickMarks() {
     if (STATUS[n.status]?.wire && o?.material && !o.material.userData.gdrWire) {
       const m = o.material.clone(); m.wireframe = true; m.userData.gdrWire = true; o.material = m; }
     const el = markOf.get(n.id); if (!el) continue;
-    const dist = n.x == null ? 0 : (n.x - p.x) * fx + (n.y - p.y) * fy + (n.z - p.z) * fz;
+    const z = n.z || 0;  // 2D では z が無い
+    const dist = n.x == null ? 0 : (n.x - p.x) * fx + (n.y - p.y) * fy + (z - p.z) * fz;
     if (dist <= 1) { el.style.display = 'none'; continue; }
-    v.set(n.x, n.y, n.z).project(cam);
+    v.set(n.x, n.y, z).project(cam);
     const s = { x:cv.left + (v.x + 1) / 2 * cv.width, y:cv.top + (1 - v.y) / 2 * cv.height };
     const r = 5 * Math.cbrt(Graph.nodeVal()(n)) * unit / dist;  // 玉の画面上の半径
     const fsz = Math.max(9, Math.min(16, r * 1.1));
@@ -218,6 +220,18 @@ function tickMarks() {
     el.style.opacity = sel && !hl.nodes.has(n.id) ? 0.25 : 1;
   }
 }
+
+// 描き方（3D / 2D）。2D は奥行きを 0 にした平面（縦は日時のまま、横だけ力学で並べる）で、回転を止めて正面から見る
+const is2d = () => document.getElementById('fView').value === '2d';
+let viewDims = 3, pendingReset = false;
+function setView() {
+  const dims = is2d() ? 2 : 3;
+  // 描画側は表示中の GDR の z しか消さないので、データセットの GDR すべてから消す（表示の外から描き足す GDR も平面に置く）
+  if (dims === 2) cur.nodes.forEach(n => { delete n.z; delete n.vz; delete n.fz; });
+  Graph.controls().noRotate = dims === 2;
+  if (dims !== viewDims) { viewDims = dims; pendingReset = true; Graph.numDimensions(dims); }
+}
+Graph.onEngineStop(() => { if (pendingReset) { pendingReset = false; resetView(); } });
 
 // 視点を戻す: 時間軸（縦）を縦にした正面から、表示中の GDR 全体が収まる距離に置く
 function resetView(ms = 800) {
@@ -342,8 +356,9 @@ function loadDataset(i, f) {
     const fstEl = document.getElementById('fStatus');
     if ([...fstEl.options].some(o => o.value === 'Proposed')) fstEl.value = 'Proposed';
   }
-  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['status','fStatus'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
+  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['status','fStatus'],['depth','fDepth'],['limit','fLimit'],['view','fView']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
+  setView();
   const s = cur.stats, ec = s.edgeCounts;
   const lin = (ec['supersedes']||0) + (ec['refines']||0) + (ec['derived-from']||0);
   document.getElementById('stats').innerHTML =
@@ -420,7 +435,8 @@ ${preOf.length ? preOf.join('\n') : '  なし'}</pre>`;
   document.getElementById('toc').style.display = 'none';
   refresh();
   const cam = () => { const d = 90, r = 1 + d / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
-    Graph.cameraPosition({ x:(node.x || 0) * r, y:(node.y || 0) * r, z:(node.z || 0) * r }, node, 900); };
+    // 2D は正面のまま寄る（斜めから見ない）
+    Graph.cameraPosition(is2d() ? { x:node.x || 0, y:node.y || 0, z:150 } : { x:(node.x || 0) * r, y:(node.y || 0) * r, z:(node.z || 0) * r }, node, 900); };
   if (node.x == null) setTimeout(cam, 800); else cam();
 }
 function clearSel() { sel = null; hl = { nodes:new Set(), links:new Set() };
@@ -483,12 +499,13 @@ document.getElementById('close').onclick = clearSel;
 document.getElementById('resetView').onclick = () => resetView();
 requestAnimationFrame(tickMarks);
 let wordTimer; document.getElementById('fWord').oninput = () => { clearTimeout(wordTimer); wordTimer = setTimeout(() => { clearSel(); render(); }, 250); };
+document.getElementById('fView').onchange = () => { setView(); render(); };
 ['showDep','showRel','hideIso','fScope','fPrefix','fStatus','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');
 dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
-// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? q=…&scope=…&prefix=…&status=Proposed|…|active|inactive&depth=1|2|all&limit=20|50|100|200。
+// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? q=…&scope=…&prefix=…&status=Proposed|…|active|inactive&depth=1|2|all&limit=20|50|100|200&view=3d|2d。
 // 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1、#0?limit=50）
 let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const [hPath, hQs] = hash.split('?');

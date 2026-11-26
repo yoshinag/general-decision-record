@@ -27,7 +27,7 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
   - 縦の位置は 日時 > uid の時刻 > ファイルの git 追加日（推定）の順で決める（位置にだけ使い、判定には使わない）
   - 読めなかったもの（status・日時・型の無い関連・知らない型・GDR らしいのに読めなかった行）は件数を出す
   - 画面で scope / PREFIX を選ぶと、当てはまる GDR と、そこから表示中のリンクを指定の段数（1 段・2 段・すべて）
-    たどった GDR だけを描く。表示数の上限も選べる（超えたら、絞り込み中は当てはまる GDR → 近い段の順、
+    たどった GDR だけを描く。表示数の上限も選べる（既定 50。超えたら、絞り込み中は当てはまる GDR → 近い段の順、
     絞り込みなしは日時の新しい順に残す）。URL の `#0?scope=arch&prefix=ARCH&depth=1&limit=50` でも指定できる
 
 表示には CDN（3d-force-graph / marked / DOMPurify。版を固定し SRI 付き）を使うので、開くときにネット接続が要る。
@@ -553,7 +553,7 @@ TEMPLATE = r'''<!DOCTYPE html>
   <select id="fScope"></select>
   <select id="fPrefix" style="margin-top:4px"></select>
   <label class="row" style="margin-top:4px">関連の段数 <select id="fDepth" style="width:auto"><option value="1">1 段</option><option value="2">2 段</option><option value="all" selected>すべて</option></select></label>
-  <label class="row" style="margin-top:4px">表示数の上限 <select id="fLimit" style="width:auto"><option value="all" selected>なし</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select></label>
+  <label class="row" style="margin-top:4px">表示数の上限 <select id="fLimit" style="width:auto"><option value="all">なし</option><option value="20">20</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select></label>
   <div id="fInfo" class="mut"></div>
   <h2>表示</h2>
   <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>

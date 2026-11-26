@@ -14,8 +14,8 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
                  （`ラベル=ディレクトリ` でラベルを付けられる。既定のラベルはディレクトリ名）。下の階層も読む。
                  `_archive` / `_reference` / `review` と `*_reviewed.md` は読まない
   --demo         架空の GDR（系譜・前提・違反の見本）をデータセットに加える
-  -o             出力先（既定: lineage_3d.html）。生成物は既定ではコミットしない（上流の GDR-META-026。
-                 リポジトリの中に出すなら .gitignore に入れる）
+  -o             出力先（既定: lineage_3d.html）。どこに出し、コミットするかは使う人が決める（上流の /gdr-lineage は
+                 save のときだけ notes/tools/ に保存してコミットする。GDR-META-041）
 
 読み方:
   - GDR の始まり: 太字の行（**GDR-X-NNN: 要約**）または見出しの行（## GDR-X-NNN: 要約）

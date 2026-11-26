@@ -27,7 +27,8 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
   - 縦の位置は 日時 > uid の時刻 > ファイルの git 追加日（推定）の順で決める（位置にだけ使い、判定には使わない）
   - 読めなかったもの（status・日時・型の無い関連・知らない型・GDR らしいのに読めなかった行）は件数を出す
   - 画面で scope / PREFIX を選ぶと、当てはまる GDR と、そこから表示中のリンクを指定の段数（1 段・2 段・すべて）
-    たどった GDR だけを描く。URL の `#0?scope=arch&prefix=ARCH&depth=1` でも指定できる
+    たどった GDR だけを描く。表示数の上限も選べる（超えたら、絞り込み中は当てはまる GDR → 近い段の順、
+    絞り込みなしは日時の新しい順に残す）。URL の `#0?scope=arch&prefix=ARCH&depth=1&limit=50` でも指定できる
 
 表示には CDN（3d-force-graph / marked / DOMPurify。版を固定し SRI 付き）を使うので、開くときにネット接続が要る。
 対応するブラウザは Chrome だけ（ほかのブラウザでの表示は確かめず、合わせない）。
@@ -552,6 +553,7 @@ TEMPLATE = r'''<!DOCTYPE html>
   <select id="fScope"></select>
   <select id="fPrefix" style="margin-top:4px"></select>
   <label class="row" style="margin-top:4px">関連の段数 <select id="fDepth" style="width:auto"><option value="1">1 段</option><option value="2">2 段</option><option value="all" selected>すべて</option></select></label>
+  <label class="row" style="margin-top:4px">表示数の上限 <select id="fLimit" style="width:auto"><option value="all" selected>なし</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select></label>
   <div id="fInfo" class="mut"></div>
   <h2>表示</h2>
   <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>
@@ -651,19 +653,31 @@ function render() {
   // scope / PREFIX の絞り込み: 当てはまる GDR から、表示中のリンクを向きを問わず指定の段数たどる
   const fs = document.getElementById('fScope').value, fp = document.getElementById('fPrefix').value;
   const dv = document.getElementById('fDepth').value, depth = dv === 'all' ? Infinity : +dv;
-  let nodes = cur.nodes;
+  const lv = document.getElementById('fLimit').value, limit = lv === 'all' ? Infinity : +lv;
+  let nodes = cur.nodes, order = null;
   seeds = new Set();
   if (fs || fp) {
     seeds = new Set(cur.nodes.filter(n => n.status !== 'Unknown' && (!fs || scopesOf(n).includes(fs)) && (!fp || prefixOf(n.id) === fp)).map(n => n.id));
     const adj = {}; links.forEach(l => { (adj[l.source] ||= []).push(l.target); (adj[l.target] ||= []).push(l.source); });
-    const keep = new Set(seeds); let front = [...seeds];
+    const keep = new Set(seeds); let front = [...seeds]; order = [...seeds];
     for (let d = 0; d < depth && front.length; d++) {
       const next = []; front.forEach(id => (adj[id] || []).forEach(v => { if (!keep.has(v)) { keep.add(v); next.push(v); } })); front = next;
+      order.push(...next);
     }
     nodes = cur.nodes.filter(n => keep.has(n.id));
-    links = links.filter(l => keep.has(l.source) && keep.has(l.target));
     document.getElementById('fInfo').textContent = `当てはまる GDR ${seeds.size} 件（大きい点）＋ 関連 ${keep.size - seeds.size} 件`;
   } else document.getElementById('fInfo').textContent = '';
+  // 表示数の上限: 絞り込み中は当てはまる GDR → 近い段の順、絞り込みなしは日時の新しい順（本文なしの点は後ろ）に残す
+  if (nodes.length > limit) {
+    const total = nodes.length;
+    if (!order) { const t = n => { const v = Date.parse(n.date || n.uidDate || n.estDate || ''); return Number.isFinite(v) ? v : -Infinity; };
+      order = [...nodes].sort((a, b) => (a.status === 'Unknown') - (b.status === 'Unknown') || t(b) - t(a)).map(n => n.id); }
+    const top = new Set(order.slice(0, limit));
+    nodes = nodes.filter(n => top.has(n.id));
+    document.getElementById('fInfo').textContent += `${document.getElementById('fInfo').textContent ? ' / ' : ''}上限 ${limit} 件を表示（全 ${total} 件）`;
+  }
+  const shown = new Set(nodes.map(n => n.id));
+  links = links.filter(l => shown.has(l.source) && shown.has(l.target));
   const used = new Set(links.flatMap(l => [l.source, l.target]));
   if (hideIso) nodes = nodes.filter(n => used.has(n.id));
   Graph.graphData({ nodes, links });
@@ -679,7 +693,7 @@ function fillFilters() {
 
 function loadDataset(i, f) {
   cur = DATASETS[i]; clearSel(); fillFilters();
-  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
+  if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }
   const s = cur.stats, ec = s.edgeCounts;
   const lin = (ec['supersedes']||0) + (ec['refines']||0) + (ec['derived-from']||0);
@@ -802,13 +816,13 @@ document.addEventListener('click', e => { const id = e.target.dataset?.id; if (!
   const n = Graph.graphData().nodes.find(n => n.id === id) || cur.nodes.find(n => n.id === id);
   if (!n) return; closeReader(); focusNode(n); });
 document.getElementById('close').onclick = clearSel;
-['showDep','showRel','hideIso','fScope','fPrefix','fDepth'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
+['showDep','showRel','hideIso','fScope','fPrefix','fDepth','fLimit'].forEach(id => document.getElementById(id).onchange = () => { clearSel(); render(); });
 const dsSel = document.getElementById('ds');
 dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
-// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? scope=…&prefix=…&depth=1|2|all。
-// 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1）
+// URL の # で開く GDR と絞り込みを指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc ? scope=…&prefix=…&depth=1|2|all&limit=20|50|100|200。
+// 例: #1/GDR-META-040、#0/GDR-ARCH-012/doc、#0?scope=ui&depth=1、#0?limit=50）
 let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const [hPath, hQs] = hash.split('?');
 const [hDs, hId, hDoc] = hPath.split('/');

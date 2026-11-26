@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
-"""GDR の系譜（GDR-META-040）を 3D で俯瞰する単一 HTML を生成する。Python 3 の標準ライブラリだけで動く。
+"""GDR の系譜を 3D で俯瞰する単一 HTML を生成する。Python 3.7 以上の標準ライブラリだけで動く。
+
+系譜の定義は上流（general-decision-record リポジトリ）の GDR 仕様 01 §3.1「系譜（先祖・子孫）の規則」。
+この版が前提にする GDR 仕様: v2.6（SPEC_VERSION）。上流の docs/ja/01_GDR/tools/ に置く任意の補助ツールで、
+GDR 仕様の版の対象外（取得リストに入れない。要る導入先がタグを指定して取得し、_reference/ には入れない）。
 
 使い方:
   python3 gdr_lineage_3d.py [ディレクトリ ...] [-o lineage_3d.html] [--demo]
 
   ディレクトリ   GDR を含む Markdown の置き場（既定: notes/91_gdr）。1 つが 1 データセットになる
-                 （`ラベル=ディレクトリ` でラベルを付けられる）。下の階層も読む。`_archive` / `_reference` と
-                 `*_reviewed.md` は読まない（notes/_archive/ は明示指定時のみ読む規則に合わせる）
+                 （`ラベル=ディレクトリ` でラベルを付けられる。既定のラベルはディレクトリ名）。下の階層も読む。
+                 `_archive` / `_reference` / `review` と `*_reviewed.md` は読まない
   --demo         架空の GDR（系譜・前提・違反の見本）をデータセットに加える
-  -o             出力先（既定: lineage_3d.html）。生成物は既定ではコミットしない（GDR-META-026）
+  -o             出力先（既定: lineage_3d.html）。生成物は既定ではコミットしない（上流の GDR-META-026。
+                 リポジトリの中に出すなら .gitignore に入れる）
 
 読み方:
+  - GDR の始まり: 太字の行（**GDR-X-NNN: 要約**）または見出しの行（## GDR-X-NNN: 要約）
   - 親子（系譜）: 置換（status 行の Superseded by / supersedes）・refines・GDR を指す derived-from
-  - 前提: depends-on（親子とは別に、同じ重みで並べる）。relates-to は弱い関連
+  - 前提: depends-on と refines を推移的にたどる（波及チェックと同じ範囲）。relates-to は弱い関連
   - 不変条件: 親子は閉路を持たない / 置換と GDR 向き derived-from では親の日時 <= 子の日時
-    （日付のみのときは日付で比べ、同日は違反としない。「日時」が無い端は uid の時刻で代える。refines は日時を比べない）
-  - 「## 1.」節を持つ文書（改善提案）はその節の GDR だけを、それ以外は文書全体の GDR を読む。コードブロック内は読まない
-  - 縦の位置は 日時 > uid の時刻 > ファイルの git 追加日（推定。位置にだけ使う）の順で決める
+    （「日時」だけで比べる。日付のみ・オフセットの無い時刻が片方にあれば日付で比べ、同日は違反としない。
+    読めない日時の端は比べない。refines は日時を比べない）
+  - 警告: 異なる GDR ID に同じ uid / 形式を満たさない uid / 同じ ID が複数の文書にあって uid が違う
+  - 「## 1. GDR」節を持つ文書（改善提案）はその節の GDR だけを、それ以外は文書全体の GDR を読む。コードブロック内は読まない
+  - 縦の位置は 日時 > uid の時刻 > ファイルの git 追加日（推定）の順で決める（位置にだけ使い、判定には使わない）
+  - 読めなかったもの（status・日時・型の無い関連・知らない型・GDR らしいのに読めなかった行）は件数を出す
 
-表示には CDN（3d-force-graph / marked / DOMPurify）を使うので、開くときにネット接続が要る。
+表示には CDN（3d-force-graph / marked / DOMPurify。版を固定し SRI 付き）を使うので、開くときにネット接続が要る。
+確かめ方（直したら毎回）: `python3 gdr_lineage_3d.py --demo -o 一時ファイル` で「GDR 17 件・違反 1 件・警告 0 件」と出ること、
+ブラウザで開いて件数の欄が埋まること。
 """
 import argparse
 import json
@@ -27,24 +38,32 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-REC_RE = re.compile(r"^\*\*(GDR-[A-Z]+-\d{3}):\s*(.+?)\*\*\s*$")
-FIELD_RE = re.compile(r"^- \*\*(status|scope|日時|関連|uid):\*\*\s*(.*)$")
-ID_RE = re.compile(r"GDR-[A-Z]+-\d{3}")
+SPEC_VERSION = "v2.6"
+TOOL_UPDATED = "2026-11-26"
+
+GID = r"GDR-[A-Z][A-Z0-9]*-\d{3,}"
+REC_RE = re.compile(rf"^(?:\*\*({GID}):\s*(.+?)\*\*|#{{1,6}}\s+({GID}):\s*(.+?))\s*$")
+GDR_LIKE_RE = re.compile(rf"^(?:\*\*|#{{1,6}}\s+)\s*`?{GID}")
+FIELD_RE = re.compile(r"^- \*\*(status|scope|日時|関連|uid)(?::\*\*|\*\*:)\s*(.*)$")
+ID_RE = re.compile(GID)
 UID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+STATUSES = ("Proposed", "Accepted", "Implemented", "Superseded", "Rejected")
+REL_TYPES = ("depends-on", "refines", "relates-to", "derived-from")
 LINEAGE = {"supersedes", "refines", "derived-from"}
 DATED = {"supersedes", "derived-from"}  # 日時の順を課すのは因果の 2 種だけ
-SKIP_DIRS = {"_archive", "_reference", ".git", "node_modules"}
+SKIP_DIRS = {"_archive", "_reference", "review", ".git", "node_modules"}
+
+
+def git_out(args, cwd):
+    try:
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, NotADirectoryError):
+        return ""
 
 
 def git_added_date(path: Path):
-    try:
-        out = subprocess.run(
-            ["git", "log", "--diff-filter=A", "--format=%aI", "--", path.name],
-            cwd=path.parent, capture_output=True, text=True, check=True,
-        ).stdout.split()
-        return out[-1] if out else None
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
+    out = git_out(["log", "--diff-filter=A", "--format=%aI", "--", path.name], path.parent).split()
+    return out[-1] if out else None
 
 
 def uid_time(uid):
@@ -62,12 +81,58 @@ def md_files(d: Path):
         yield f
 
 
-def parse_text(name, text, est, records, edges, stats):
-    has_sec1 = any(l.startswith("## 1.") for l in text.splitlines())
+def new_stats():
+    return {"issue_refs": 0, "unreadable_status": 0, "unreadable_date": 0, "untyped_refs": 0,
+            "unknown_types": 0, "unread_gdr_lines": 0, "copies": 0}
+
+
+def parse_status(val, rid, edges, stats):
+    plain = val.replace("*", "").strip()
+    head = re.match(r"[A-Za-z]+", plain)
+    status = head.group(0) if head and head.group(0) in STATUSES else "Unreadable"
+    if status == "Unreadable":
+        stats["unreadable_status"] += 1
+    if re.match(r"Superseded\s+by\b", plain):
+        for t in ID_RE.findall(plain):
+            edges.append((rid, t, "supersedes"))
+    m = re.search(r"\bsupersedes\b(.*)", plain)
+    if m:
+        for t in ID_RE.findall(m.group(1)):
+            edges.append((t, rid, "supersedes"))
+    return status
+
+
+def parse_relations(val, rid, edges, stats):
+    # 「関連」はカンマ区切り。括弧の中のカンマでは切らない
+    for part in re.split(r",(?![^（(]*[)）])", val):
+        p = part.strip()
+        if not p:
+            continue
+        m = re.match(r"`?([a-z]+(?:-[a-z]+)*)`?\s+(.*)", p)
+        if m and m.group(1) in REL_TYPES:
+            typ, rest = m.group(1), m.group(2).strip().strip("`")
+            if rest.startswith("§"):
+                stats["issue_refs"] += 1  # 課題（§N-M）への参照。系譜の外
+                continue
+            t = ID_RE.search(rest)  # 注記・リンク・バッククォートが付いていても最初の GDR ID を拾う
+            if t:
+                edges.append((t.group(0), rid, typ))  # 内部の向き: 親 → 子 / 前提 → 依存側（表示では逆向き）
+            else:
+                stats["untyped_refs"] += 1
+        elif m and "-" in m.group(1) and ID_RE.search(p):
+            stats["unknown_types"] += 1
+        elif ID_RE.search(p):
+            stats["untyped_refs"] += 1  # 型の無い GDR ID。種類が分からないので線にしない
+
+
+def parse_text(name, text, est, records, edges, stats, dups):
+    lines = text.splitlines()
+    has_sec1 = any(re.match(r"## 1\.\s*GDR", l) for l in lines)
     in_sec = not has_sec1
     in_code = False
     cur = None
-    for line in text.splitlines():
+    found = 0
+    for line in lines:
         if line.startswith("```"):
             in_code = not in_code
             if cur:
@@ -77,21 +142,25 @@ def parse_text(name, text, est, records, edges, stats):
             if cur:
                 cur["_body"].append(line)
             continue
+        m = REC_RE.match(line) if in_sec else None
+        if m:
+            rid, title = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+            cur = {"id": rid, "title": title, "file": name, "status": "Proposed", "scope": "", "date": None,
+                   "uid": None, "uidDate": None, "estDate": est, "_body": [line]}
+            found += 1
+            if rid in records:
+                dups.append((records[rid], cur))  # 写しか衝突かは uid を読んだ後で判定する
+            else:
+                records[rid] = cur
+            continue
+        if in_sec and GDR_LIKE_RE.match(line):
+            stats["unread_gdr_lines"] += 1  # GDR らしいのに読めなかった行
         if line.startswith("## ") or line.startswith("# "):
             if has_sec1:
-                in_sec = line.startswith("## 1.")
+                in_sec = bool(re.match(r"## 1\.\s*GDR", line))
             cur = None
             continue
-        if not in_sec:
-            continue
-        m = REC_RE.match(line)
-        if m:
-            cur = {"id": m.group(1), "title": m.group(2), "file": name, "status": "Proposed",
-                   "scope": "", "date": None, "uid": None, "uidDate": None,
-                   "estDate": est, "_body": [line]}
-            records[cur["id"]] = cur
-            continue
-        if not cur:
+        if not in_sec or not cur:
             continue
         cur["_body"].append(line)
         fm = FIELD_RE.match(line)
@@ -99,12 +168,7 @@ def parse_text(name, text, est, records, edges, stats):
             continue
         key, val = fm.groups()
         if key == "status":
-            cur["status"] = val.split()[0] if val.split() else "Proposed"
-            if val.startswith("Superseded by"):
-                for t in ID_RE.findall(val):
-                    edges.append((cur["id"], t, "supersedes"))
-            for t in re.findall(r"supersedes\s+(GDR-[A-Z]+-\d{3})", val):
-                edges.append((t, cur["id"], "supersedes"))
+            cur["status"] = parse_status(val, cur["id"], edges, stats)
         elif key == "scope":
             cur["scope"] = val
         elif key == "日時":
@@ -113,27 +177,23 @@ def parse_text(name, text, est, records, edges, stats):
             cur["uid"] = val.strip()
             cur["uidDate"] = uid_time(cur["uid"])
         elif key == "関連":
-            for part in val.split(","):
-                bits = part.strip().split()
-                if len(bits) < 2:
-                    continue
-                typ, target = bits[0], bits[1]
-                if not ID_RE.fullmatch(target):
-                    stats["issue_refs"] += 1  # 課題（§N-M）への derived-from など。系譜の外
-                    continue
-                if typ in ("refines", "derived-from", "depends-on", "relates-to"):
-                    # 内部の向き: 親 → 子 / 前提 → 依存側 / 相手 → 書いた側（表示では逆向きに描く）
-                    edges.append((target, cur["id"], typ))
+            parse_relations(val, cur["id"], edges, stats)
+    return found
 
 
 def parse_sources(sources):
     """sources: [(name, text, estDate)]"""
-    records, edges, stats, files = {}, [], {"issue_refs": 0}, {}
+    records, edges, stats, files, warnings, dups = {}, [], new_stats(), {}, [], []
     for name, text, est in sources:
-        files[name] = text
-        parse_text(name, text, est, records, edges, stats)
+        if parse_text(name, text, est, records, edges, stats, dups):
+            files[name] = text  # GDR を 1 件以上読めた文書だけを埋め込む
+    for prev, d in dups:  # 同じ ID が複数の文書にある: uid が同じ（か両方に無い）なら写し、違えば採番の衝突の疑い
+        if (d["uid"] or None) == (prev["uid"] or None):
+            stats["copies"] += 1
+        else:
+            warnings.append({"kind": "id-conflict", "id": d["id"], "files": [prev["file"], d["file"]]})
     seen, uniq = set(), []
-    for e in edges:  # 置換は両側に書かれるので重ねない
+    for e in edges:  # 置換は両側に書かれ、写しも同じリンクを持つので重ねない
         if e not in seen:
             seen.add(e)
             uniq.append(e)
@@ -143,48 +203,58 @@ def parse_sources(sources):
                 records[n] = {"id": n, "title": "（この集合に本文なし。退避済みか別の集合）", "file": "",
                               "status": "Unknown", "scope": "", "date": None, "uid": None,
                               "uidDate": None, "estDate": None, "_body": []}
+    by_uid = {}
     for r in records.values():
+        if r["uid"]:
+            if not UID_RE.match(r["uid"]):
+                warnings.append({"kind": "uid-format", "id": r["id"], "uid": r["uid"]})
+            by_uid.setdefault(r["uid"], []).append(r["id"])
         body = r.pop("_body")
         while body and body[-1].strip() in ("", "---"):
             body.pop()
         r["md"] = "\n".join(body)
-    return records, uniq, stats, files
+    for u, ids in by_uid.items():
+        if len(ids) > 1:
+            warnings.append({"kind": "uid-dup", "uid": u, "ids": ids})
+    return records, uniq, stats, files, warnings
 
 
-def when(r):
-    """不変条件に使う時刻: (値, 日付のみか)。日時 > uid の時刻"""
-    s = r["date"] or r["uidDate"]
-    if not s:
-        return None
+def parse_when(s, stats):
+    """「日時」を (値, 日付で比べるか) にする。読めなければ None"""
     s = s.strip()
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
         return s, True
+    s2 = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", s.replace("Z", "+00:00"))
     try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00")), False
+        dt = datetime.fromisoformat(s2)
     except ValueError:
-        return s[:10], True
+        stats["unreadable_date"] += 1
+        return None
+    if dt.tzinfo is None:  # オフセットの無い時刻は日付で比べる
+        return dt.date().isoformat(), True
+    return dt, False
 
 
 def older_or_same(p, c):
-    if p[1] or c[1]:  # どちらかが日付のみ → 日付で比べ、同日は違反にしない
+    if p[1] or c[1]:  # どちらかが日付で比べるもの → 日付で比べ、同日は違反にしない
         pd = p[0] if p[1] else p[0].date().isoformat()
         cd = c[0] if c[1] else c[0].date().isoformat()
         return pd <= cd
-    a, b = p[0], c[0]
-    if (a.tzinfo is None) != (b.tzinfo is None):
-        a, b = a.replace(tzinfo=None), b.replace(tzinfo=None)
-    return a <= b
+    return p[0] <= c[0]
 
 
-def check(records, edges):
+def check(records, edges, stats):
     lin = [(s, t, k) for s, t, k in edges if k in LINEAGE]
+    when = {}
+    for r in records.values():
+        when[r["id"]] = parse_when(r["date"], stats) if r["date"] else None
     violations = []
     for s, t, k in lin:
         if k not in DATED:
             continue
-        p, c = when(records[s]), when(records[t])
+        p, c = when[s], when[t]
         if p and c and not older_or_same(p, c):
-            violations.append({"kind": "date", "source": s, "target": t, "type": k})
+            violations.append({"kind": "date", "parent": s, "child": t, "type": k})
     adj = {}
     for s, t, _ in lin:
         adj.setdefault(s, []).append(t)
@@ -207,26 +277,30 @@ def check(records, edges):
     return violations
 
 
-def build(name, sources):
-    records, edges, stats, files = parse_sources(sources)
-    violations = check(records, edges)
-    bad = {(v["source"], v["target"]) for v in violations if v["kind"] == "date"}
-    links = [{"source": s, "target": t, "type": k, "violation": (s, t) in bad} for s, t, k in edges]
+def build(name, sources, commit=""):
+    records, edges, stats, files, warnings = parse_sources(sources)
+    violations = check(records, edges, stats)
+    bad = set()
+    for v in violations:
+        if v["kind"] == "date":
+            bad.add((v["parent"], v["child"], v["type"]))
+        else:
+            for a, b in zip(v["path"], v["path"][1:]):
+                for k in LINEAGE:
+                    bad.add((a, b, k))
+    links = [{"source": s, "target": t, "type": k, "violation": (s, t, k) in bad} for s, t, k in edges]
     counts = {}
     for l in links:
         counts[l["type"]] = counts.get(l["type"], 0) + 1
     real = [r for r in records.values() if r["status"] != "Unknown"]
-    return {"name": name, "files": files, "nodes": list(records.values()), "links": links,
-            "violations": violations,
+    return {"name": name, "commit": commit, "files": files, "nodes": list(records.values()), "links": links,
+            "violations": violations, "warnings": warnings,
             "stats": {"records": len(real), "dated": sum(1 for r in real if r["date"]),
                       "edgeCounts": counts, **stats}}
 
 
 def dir_sources(d: Path):
-    out = []
-    for f in md_files(d):
-        out.append((str(f.relative_to(d)), f.read_text(encoding="utf-8"), git_added_date(f)))
-    return out
+    return [(str(f.relative_to(d)), f.read_text(encoding="utf-8"), git_added_date(f)) for f in md_files(d)]
 
 
 def main():
@@ -240,19 +314,29 @@ def main():
     for spec in specs:
         label, sep, p = spec.partition("=")
         if not sep:
-            label, p = spec, spec
+            p = spec
         d = Path(p).expanduser()
         if not d.is_dir():
             ap.error(f"ディレクトリがありません: {p}")
-        datasets.append(build(label, dir_sources(d)))
+        if not sep:
+            label = d.resolve().name  # 絶対パス（利用者名を含む）を HTML に入れない
+        datasets.append(build(label, dir_sources(d), git_out(["rev-parse", "--short", "HEAD"], d)))
     if a.demo:
         datasets.insert(0, build("demo: 架空の GDR（系譜・前提・違反の見本）",
                                  [("demo/架空プロジェクトのGDR.md", DEMO_MD, None)]))
-    data = json.dumps(datasets, ensure_ascii=False).replace("</", "<\\/")
-    Path(a.out).write_text(TEMPLATE.replace("/*__DATA__*/[]", data), encoding="utf-8")
+    data = json.dumps(datasets, ensure_ascii=False).replace("<", "\\u003c")
+    names = " / ".join(f"{ds['name']}{'@' + ds['commit'] if ds['commit'] else ''}" for ds in datasets)
+    header = (f"<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 {SPEC_VERSION} 向け、{TOOL_UPDATED} 版）が "
+              f"{datetime.now().astimezone().isoformat(timespec='seconds')} に生成。データ: {names}"
+              f"{'（--demo）' if a.demo else ''} -->\n").replace("--", "‐‐").replace("<!‐‐", "<!--").replace("‐‐>", "-->")
+    html = TEMPLATE.replace("/*__DATA__*/[]", data).replace("__SPEC__", SPEC_VERSION).replace("__UPDATED__", TOOL_UPDATED)
+    Path(a.out).write_text(header + html, encoding="utf-8")
     for ds in datasets:
-        print(f"{ds['name']}: GDR {ds['stats']['records']} 件 / リンク {ds['stats']['edgeCounts']} / "
-              f"違反 {len(ds['violations'])} 件")
+        s = ds["stats"]
+        unread = {k: s[k] for k in ("unreadable_status", "unreadable_date", "untyped_refs", "unknown_types",
+                                    "unread_gdr_lines") if s[k]}
+        print(f"{ds['name']}: GDR {s['records']} 件 / リンク {s['edgeCounts']} / 違反 {len(ds['violations'])} 件 / "
+              f"警告 {len(ds['warnings'])} 件" + (f" / 読めなかったもの {unread}" if unread else ""))
     print(f"→ {a.out}")
 
 
@@ -260,7 +344,7 @@ DEMO_MD = r'''
 # 架空プロジェクトの GDR（系譜ビューの見本）
 
 > 見本で示すもの: 置換の連鎖（ARCH-002 → 009、ARCH-003 → 010）、細分化と派生が合流する GDR（ARCH-012）、前提（depends-on）の連鎖、
-> 日時が無く uid の時刻で補う GDR（UI-007）、不変条件の違反（UI-006 は派生元 UI-004 より古い日時）、
+> 日時が無く、縦の位置を uid の時刻で決める GDR（UI-007。uid は見本のために作った値で、写さない）、不変条件の違反（UI-006 は派生元 UI-004 より古い日時）、
 > refines では日時が逆でも違反にしないこと（ARCH-013 は親 ARCH-011 より古い日時）
 
 ## 1. GDR（General Decision Record）
@@ -322,6 +406,10 @@ DEMO_MD = r'''
 
 - **status:** Implemented
 - **scope:** ui
+- **決定:** 設定画面は専用のページにする（モーダルにはしない）
+- **理由:** 項目が多く、モーダルではスクロールが二重になる。却下したモーダル案（UI-004）の検討から生まれた
+- **影響:** 設定へのリンクを各画面のヘッダに置く
+- **再検討条件:** 設定項目が 5 個以下に減る
 - **日時:** 2026-05-20T10:00:00+09:00
 - **関連:** derived-from GDR-UI-004
 
@@ -343,7 +431,11 @@ DEMO_MD = r'''
 
 - **status:** Implemented (supersedes GDR-ARCH-002)
 - **scope:** arch, perf
-- **日時:** 2026-08-15T10:00:00+09:00
+- **決定:** セッションストアを Memcached から Redis に移す
+- **理由:** 永続化とレプリケーションが要るようになった。Memcached では再起動でセッションが消える
+- **影響:** ARCH-002 は失効。キー命名（ARCH-011）と運用（INFRA-004）を決め直す
+- **再検討条件:** セッションを持たない認証方式に移る
+- **日時:** 2026-11-02T10:00:00+09:00
 - **関連:** depends-on GDR-INFRA-001
 
 **GDR-INFRA-004: Redis は ElastiCache で運用する**
@@ -358,7 +450,7 @@ DEMO_MD = r'''
 - **status:** Accepted
 - **scope:** arch
 - **日時:** 2026-09-01T10:00:00+09:00
-- **関連:** refines GDR-ARCH-009
+- **関連:** refines GDR-ARCH-009, depends-on GDR-INFRA-001
 
 **GDR-ARCH-013: Redis のキーの TTL を用途別に定める**
 
@@ -439,29 +531,32 @@ TEMPLATE = r'''<!DOCTYPE html>
   @media (max-width:700px) { #reader { inset:8px; } }
   @media (max-width:700px){ #hud{ width:calc(100% - 52px); max-height:40%; } #detail{ top:auto; bottom:12px; left:12px; width:auto; max-height:45%; } }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.1/dist/3d-force-graph.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<!-- 版を上げたら integrity を計算しなおす（CDN と npm のパッケージの両方で突き合わせる） -->
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.1/dist/3d-force-graph.min.js" integrity="sha384-i98VDQKdpyVrtyuFn0fjUWJBLBmxnqHqOANcvYe9HLJUgT2wPixa4ZkLd7Dh3VEk" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.5.0/dist/purify.min.js" integrity="sha384-DOUwTXbuiiQxlONuue5N42674XXDfjIJ/LTPtJMZ2ZV1Ir4NRQ3OnM/yM505YQAc" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="graph"></div>
 
 <div id="hud" class="panel">
   <h1>GDR 系譜 3D</h1>
-  <div class="mut">系譜の定義は GDR-META-040。縦は日時で<b>上ほど古い</b>（親・前提が上）。矢印は関係ビュー（06 §4）と同じ向き</div>
+  <div class="mut">系譜の定義は上流の GDR 仕様 01 §3.1（このツールは __SPEC__ 向け、__UPDATED__ 版）。縦は日時で<b>上ほど古い</b>（親・前提が上）。矢印は関係ビュー（06 §4）と同じ向き</div>
   <h2>データ</h2>
   <select id="ds"></select>
   <div id="stats" class="mut" style="margin-top:4px"></div>
   <h2>表示</h2>
-  <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く</label>
+  <label><input type="checkbox" id="showDep" checked> 前提（depends-on）も描く（refines は親子として常に描く）</label>
   <label><input type="checkbox" id="showRel"> 弱い関連（relates-to）も描く</label>
   <label><input type="checkbox" id="hideIso"> 線のない GDR を隠す</label>
   <h2>status</h2>
   <div id="legStatus"></div>
   <h2>リンク（矢印は子 → 親・新 → 旧）</h2>
   <div id="legLink"></div>
-  <h2>不変条件の違反</h2>
+  <h2>不変条件の違反・警告</h2>
   <div id="viol"></div>
+  <h2>読めなかったもの</h2>
+  <div id="unread" class="mut"></div>
   <div class="mut" style="margin-top:10px">左ドラッグ: 回転 / ホイール: ズーム / 右ドラッグ: 移動<br>クリック: 先祖と子孫を強調 / 背景クリック: 解除</div>
 </div>
 
@@ -475,12 +570,14 @@ TEMPLATE = r'''<!DOCTYPE html>
 const DATASETS = /*__DATA__*/[];
 
 const STATUS = {
-  Proposed:    { c:'#94a3b8', l:'Proposed（未確定）' },
-  Accepted:    { c:'#38bdf8', l:'Accepted（合意済み）' },
+  // 色相は関係ビュー（06 §4）にそろえる。暗い背景なので明るさは上げている
+  Proposed:    { c:'#60a5fa', l:'Proposed（未確定）' },
+  Accepted:    { c:'#2dd4bf', l:'Accepted（合意済み）' },
   Implemented: { c:'#22c55e', l:'Implemented' },
-  Superseded:  { c:'#a16207', l:'Superseded（失効）' },
-  Rejected:    { c:'#a855f7', l:'Rejected（失効）' },
-  Unknown:     { c:'#475569', l:'本文なし（集合の外）' },
+  Superseded:  { c:'#9ca3af', l:'Superseded（失効）' },
+  Rejected:    { c:'#8b6b6b', l:'Rejected（失効。灰に赤み）' },
+  Unreadable:  { c:'#eab308', l:'status が読めない' },
+  Unknown:     { c:'#475569', l:'本文なし（集合の外・退避済み）' },
 };
 const LINK = {
   'supersedes':   { c:'#f8fafc', l:'supersedes（新 → 旧）親子', lin:true },
@@ -497,10 +594,14 @@ document.getElementById('legStatus').innerHTML = Object.values(STATUS)
   .map(s => `<div class="row"><span class="dot" style="background:${s.c}"></span>${s.l}</div>`).join('');
 document.getElementById('legLink').innerHTML = Object.values(LINK)
   .map(s => `<div class="row"><span class="bar" style="background:${s.c};${s.c==='#1e293b'?'outline:1px solid #475569':''}"></span>${s.l}</div>`).join('')
-  + `<div class="row"><span class="bar" style="background:${BAD}"></span>不変条件の違反（置換・派生の日時の逆転）</div>`;
+  + `<div class="row"><span class="bar" style="background:${BAD}"></span>不変条件の違反（閉路・置換と派生の日時の逆転）</div>`;
 
 let cur, sel = null, hl = { nodes:new Set(), links:new Set() };
 
+if (typeof ForceGraph3D === 'undefined' || typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+  document.getElementById('stats').textContent = 'CDN からライブラリを読み込めませんでした（オフライン、または integrity の不一致）。';
+  throw new Error('libraries not loaded');
+}
 const Graph = ForceGraph3D()(document.getElementById('graph'))
   .backgroundColor('#0b0f19')
   .nodeRelSize(5)
@@ -516,18 +617,16 @@ const Graph = ForceGraph3D()(document.getElementById('graph'))
   .linkWidth(l => l.violation ? 2.5 : LINK[l.type].lin ? 1.2 : 0.3)
   .linkDirectionalArrowLength(l => LINK[l.type].lin ? 5 : 2.5)
   .linkDirectionalArrowRelPos(1)
-  .linkDirectionalParticles(l => LINK[l.type].lin ? 2 : 0)
-  .linkDirectionalParticleSpeed(0.006)
-  .linkDirectionalParticleWidth(1.8)
   .onNodeClick(focusNode)
   .onBackgroundClick(clearSel);
 
 const sid = x => typeof x === 'object' ? x.id : x;
-const dateLabel = n => n.date ? day(n.date) : n.uidDate ? day(n.uidDate) + '（uid の時刻）' : n.estDate ? day(n.estDate) + '（推定: ファイル追加日）' : '日時なし';
+const dateLabel = n => n.date ? day(n.date) : n.uidDate ? day(n.uidDate) + '（uid の時刻。位置だけ）' : n.estDate ? day(n.estDate) + '（推定: ファイル追加日。位置だけ）' : '日時なし';
 
 function placeY(ds) {
-  const t = n => { const s = n.date || n.uidDate || n.estDate; return s ? Date.parse(s) : null; };
+  const t = n => { for (const s of [n.date, n.uidDate, n.estDate]) { const v = s ? Date.parse(s) : NaN; if (Number.isFinite(v)) return v; } return null; };
   const vals = ds.nodes.map(t).filter(v => v != null);
+  if (!vals.length) return;
   const lo = Math.min(...vals), hi = Math.max(...vals), H = 60 + 22 * Math.sqrt(ds.nodes.length);
   ds.nodes.forEach(n => { const v = t(n);
     n.fy = (v == null || hi === lo) ? undefined : H - 2 * H * (v - lo) / (hi - lo); });
@@ -552,10 +651,16 @@ function loadDataset(i) {
   document.getElementById('stats').innerHTML =
     `GDR ${s.records} 件（日時あり ${s.dated}）<br>系譜のリンク ${lin}（置換 ${ec['supersedes']||0} / refines ${ec['refines']||0} / derived-from ${ec['derived-from']||0}）<br>`+
     `系譜の外: depends-on ${ec['depends-on']||0} / relates-to ${ec['relates-to']||0} / 課題への derived-from ${s.issue_refs}`;
-  document.getElementById('viol').innerHTML = cur.violations.length ? cur.violations.map(v => v.kind === 'date'
-      ? `<div class="v" data-id="${esc(v.target)}">日時の逆転: ${esc(v.source)} → ${esc(v.target)}（${esc(v.type)}）</div>`
-      : `<div class="v" data-id="${esc(v.path[0])}">閉路: ${esc(v.path.join(' → '))}</div>`).join('')
-    : '<div class="mut">なし</div>';
+  const W = { 'uid-dup': w => `uid の重複: ${esc(w.ids.join(' / '))}`, 'uid-format': w => `uid の形式が UUID v7 でない: ${esc(w.id)}`,
+    'id-conflict': w => `同じ ID で uid が違う（採番の衝突の疑い）: ${esc(w.id)}（${esc(w.files.join(' / '))}）` };
+  const vs = cur.violations.map(v => v.kind === 'date'
+      ? `<div class="v" data-id="${esc(v.child)}">日時の逆転: ${esc(v.child)} → ${esc(v.parent)}（${esc(v.type)}。子の日時が親より古い）</div>`
+      : `<div class="v" data-id="${esc(v.path[0])}">閉路: ${esc(v.path.join(' → '))}</div>`)
+    .concat(cur.warnings.map(w => `<div class="v" data-id="${esc(w.id || w.ids[0])}">警告: ${W[w.kind](w)}</div>`));
+  document.getElementById('viol').innerHTML = vs.length ? vs.join('') : '<div class="mut">なし</div>';
+  const U = { unreadable_status:'status', unreadable_date:'日時', untyped_refs:'型の無い・対象の読めない関連', unknown_types:'知らない型の関連', unread_gdr_lines:'GDR らしいのに読めなかった行' };
+  const ur = Object.entries(U).filter(([k]) => s[k]).map(([k, l]) => `${l} ${s[k]}`);
+  document.getElementById('unread').innerHTML = (ur.length ? ur.join(' / ') : 'なし') + (s.copies ? `<br>同じ GDR の写し ${s.copies} 件を 1 件にまとめた` : '');
   render();
   setTimeout(() => Graph.zoomToFit(600, 40), 1500);
 }
@@ -564,7 +669,7 @@ function lineageMaps() {
   const up = {}, down = {}, pre = {}, preOf = {};
   cur.links.forEach(l => { const s = sid(l.source), t = sid(l.target);
     if (LINK[l.type].lin) { (up[t] ||= []).push([s, l]); (down[s] ||= []).push([t, l]); }
-    else if (l.type === 'depends-on') { (pre[t] ||= []).push([s, l]); (preOf[s] ||= []).push([t, l]); } });
+    if (l.type === 'depends-on' || l.type === 'refines') { (pre[t] ||= []).push([s, l]); (preOf[s] ||= []).push([t, l]); } });
   return { up, down, pre, preOf };
 }
 
@@ -572,7 +677,7 @@ function tree(id, map, depth, seen, out) {
   for (const [nid, l] of (map[id] || [])) {
     hl.nodes.add(nid); hl.links.add(l.k);
     const n = byId(nid);
-    const label = l.type === 'depends-on' ? '' : ' — ' + l.type;
+    const label = ' — ' + l.type;
     out.push(`${'  '.repeat(depth)}<span class="id" data-id="${esc(nid)}">${esc(nid)}</span>（${esc(n.status)}, ${esc(dateLabel(n))}）${label}${l.violation ? ' <span style="color:#fca5a5">⚠ 日時の逆転</span>' : ''}`);
     if (!seen.has(nid)) { seen.add(nid); tree(nid, map, depth + 1, seen, out); }
   }
@@ -590,7 +695,7 @@ function focusNode(node) {
   const role = !m.up[node.id] && !m.down[node.id] ? '（系譜のリンクなし）' : !m.up[node.id] ? '（起点）' : !m.down[node.id] ? '（末端）' : '';
   document.getElementById('detailHead').innerHTML =
     `<div style="color:#38bdf8;font-size:12px">${esc(node.id)} · ${esc(node.scope)} · ${esc(node.file)}</div>
-     <div style="font-weight:600;margin:4px 0 0" class="md">${DOMPurify.sanitize(marked.parseInline(node.title))}</div>`;
+     <div style="font-weight:600;margin:4px 0 0" class="md">${DOMPurify.sanitize(marked.parseInline(node.title), PURIFY)}</div>`;
   const mdEl = document.getElementById('tabMd');
   if (node.md) renderMd(mdEl, node.md); else mdEl.innerHTML = '<p class="mut">この集合に本文がありません。</p>';
   document.getElementById('openDoc').style.display = node.file ? '' : 'none';
@@ -613,14 +718,16 @@ function clearSel() { sel = null; hl = { nodes:new Set(), links:new Set() };
   document.getElementById('detail').style.display = 'none'; refresh(); }
 function refresh() { Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()); }
 
-const ID_RE = /GDR-[A-Z]+-\d{3}/g;
+const ID_RE = /GDR-[A-Z][A-Z0-9]*-\d{3,}/g;
+// 本文の生の HTML で、表示を壊したり偽ったりできるものを通さない
+const PURIFY = { FORBID_TAGS:['style','form','input','textarea','select','button'], FORBID_ATTR:['id','name','style'] };
 // 日本語の約物（「」（）など）に隣接する **太字** を CommonMark が閉じない問題の補正
 marked.use({ tokenizer: { emStrong(src) {
   const m = /^\*\*(?=\S)([^*\n]*?\S)\*\*/.exec(src);
   return m ? { type:'strong', raw:m[0], text:m[1], tokens:this.lexer.inlineTokens(m[1]) } : false;
 } } });
 function renderMd(el, src) {
-  el.innerHTML = DOMPurify.sanitize(marked.parse(src, { gfm:true }));
+  el.innerHTML = DOMPurify.sanitize(marked.parse(src, { gfm:true }), PURIFY);
   el.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
   // 本文中の GDR ID をクリックでその GDR へ移動できるようにする
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
@@ -644,8 +751,8 @@ function openReader(file, id) {
   const body = document.getElementById('readerBody');
   renderMd(body, src);
   document.getElementById('reader').style.display = 'flex';
-  // 対象の GDR 見出し（**GDR-…: …** の段落）を探して強調・スクロール
-  const p = [...body.querySelectorAll('p')].find(p => p.firstElementChild?.tagName === 'STRONG' && p.textContent.trim().startsWith(id + ':'));
+  // 対象の GDR の始まり（**GDR-…: …** の段落か ## GDR-…: の見出し）を探して強調・スクロール
+  const p = [...body.querySelectorAll('p, h1, h2, h3, h4, h5, h6')].find(p => (p.tagName !== 'P' || p.firstElementChild?.tagName === 'STRONG') && p.textContent.trim().startsWith(id + ':'));
   if (p) { p.classList.add('here'); requestAnimationFrame(() => p.scrollIntoView({ block:'start' })); } else body.scrollTop = 0;
 }
 function closeReader() { document.getElementById('reader').style.display = 'none'; }
@@ -666,7 +773,8 @@ dsSel.innerHTML = DATASETS.map((d, i) => `<option value="${i}">${esc(d.name)}</o
 dsSel.onchange = () => loadDataset(+dsSel.value);
 window.addEventListener('resize', () => Graph.width(innerWidth).height(innerHeight));
 // URL の # で開く GDR を指定できる（# の後は データセットの番号（0 から）/ GDR ID / doc。例: #1/GDR-META-040、#0/GDR-ARCH-012/doc）
-const [hDs, hId, hDoc] = decodeURIComponent(location.hash.slice(1)).split('/');
+let hash = ''; try { hash = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+const [hDs, hId, hDoc] = hash.split('/');
 const hIdx = /^\d+$/.test(hDs || '') && +hDs < DATASETS.length ? +hDs : 0;
 dsSel.value = hIdx; loadDataset(hIdx);
 if (hId) setTimeout(() => { const n = cur.nodes.find(n => n.id === hId); if (!n) return;

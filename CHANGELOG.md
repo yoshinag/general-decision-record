@@ -8,6 +8,20 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.5 — 2026-11-26
+
+- **互換性:** MINOR（GDR の書式・status 値・遷移・理由の出所の規則は変わらない。必須の移行なし）。**ただし user-level config を更新すると、`レビュー：` / `/gdr-review` が確認を挟まずに本体を編集・コミットするようになる**（止めるときは「レビューのみ」）。**解釈版によらず適用**する。v1.x の導入先では、反映の対象に `Proposed` の GDR があるとき、合意済みかどうかを反映の前に 1 回確かめる
+- **要約:**
+  - **レビューの委任:** レビューは起票した文脈から独立した文脈で、レビュアーのモデル（上位モデル）に書かせる。Claude Code ではレビュー用サブエージェント `~/.claude/agents/gdr-reviewer.md` に委ね、レビュアーのモデルと推論の強さの指定は定義の frontmatter の 1 か所に書く（プロジェクトの `.claude/agents/` で上書き可）
+  - **レビューと反映のワンセット:** レビューに続けて確認を挟まず反映まで行う。人の確認は「判断が要ると印の付いた指摘への回答」と「合意」に移る。代わりに、記録と取り消し（`_reviewed` をコミットしてから反映し、反映を別コミットにする）・止める条件・対象の絞り込み（確定済み GDR の軽微な訂正は聞いて反映、それ以外は置換 GDR の候補として報告）・指摘の印（【そのまま反映可】／【要ユーザー判断】）・合意との境界（反映時の回答は合意ではない）をそろえる
+  - [02 §5.2](docs/ja/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md) に原則、[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) に `gdr-reviewer.md` の仕様と「レビュー反映の規則」、[04](docs/ja/01_GDR/guide/04_PROMPT_GUIDE.md) §3・§6 と [00](docs/ja/01_GDR/guide/00_GETTING_STARTED.md) の説明・配置プロンプトを更新。03・テンプレート・図は変更なし
+  - 根拠: [kaizen 014](docs/ja/91_demo_buildup_documents.md/kaizen/14_レビューの上位モデル委任と反映のワンセット化提案.md)（GDR-META-039）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: user-level config を更新する — `agents/gdr-reviewer.md` を新しく置く。`commands/gdr-review.md` と `commands/gdr-apply-review.md` は**必ず同時に**更新する（`gdr-review.md` だけ新しくすると、止める条件も印も無い旧い反映の規則のまま確認なしで反映が走る）
+  - 任意: `_reference/02_AI_DRIVEN_GDR_BUILDUP.md` / `_reference/guide/04_PROMPT_GUIDE.md` を v2.5 で取り直す
+- **user-level config:** 更新必要 — `CLAUDE.md`（レビューの委任・`レビュー：` のワンセット・現行版 v2.5）、`commands/gdr-review.md`、`commands/gdr-apply-review.md`、`commands/gdr-flow.md`（フェーズ 2〜3 の判定・フェーズ 4）、新規 `agents/gdr-reviewer.md`
+
 ## v2.4 — 2026-11-12
 
 - **互換性:** MINOR（図の追加と、`_reference/` に図を取り込む手順の追加のみ。規則・書式・解釈は変わらない）

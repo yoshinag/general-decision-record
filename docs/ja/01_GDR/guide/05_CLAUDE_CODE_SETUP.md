@@ -6,7 +6,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 
 本ガイドは [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 から呼ばれる詳細仕様。Cursor / GitHub Copilot などを使う場合は不要。
 
-## 配置するファイル（10 ファイル + 任意 1 ファイル）
+## 配置するファイル（10 ファイル + 任意 2 ファイル）
 
 | 配置パス | 役割 |
 |---|---|
@@ -21,6 +21,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 | `~/.claude/commands/gdr-upgrade.md` | スラッシュコマンド `/gdr-upgrade [<目標版>]` の定義（**GDR 仕様の版の更新** — 差分提示・採用記録。短縮キーワードなし） |
 | `~/.claude/agents/gdr-reviewer.md` | レビュー用サブエージェントの定義（`/gdr-review` / `レビュー：` がレビュー本体を委ねる先。レビュアーのモデルの指定はここだけに書く。[§`~/.claude/agents/gdr-reviewer.md` の仕様](#claudeagentsgdr-reviewermd-の仕様)） |
 | `~/.claude/commands/gdr-map.md` | **（任意）** スラッシュコマンド `/gdr-map [<対象>]` の定義（**可視化** — [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) 準拠。既定 6 キーワード体系の外） |
+| `~/.claude/commands/gdr-lineage.md` | **（任意）** スラッシュコマンド `/gdr-lineage [<対象>]` の定義（**3D の系譜ビューア** — [06 §4](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) の任意ツールを取得・生成し Chrome で開く。既定 6 キーワード体系の外） |
 
 ## `~/.claude/CLAUDE.md` の仕様
 
@@ -69,7 +70,8 @@ argument-hint: <引数の形式>
 | `gdr-archive.md` | 対象ファイル / ディレクトリを `notes/_archive/` 配下へ退避（AI デフォルト除外領域） | `<ファイル or ディレクトリのパス>` | `git mv` で `notes/_archive/{元のパス}` に退避し 1 コミット。GDR 本文を退避するときは、退避する GDR を `depends-on` / `refines` で指す有効な GDR を探し、あれば一覧を示して続行を確認する（波及チェックの不変条件。止めはしない）。同名既存ファイル時はエラー終了。ディレクトリ指定時はディレクトリごと退避。物理削除はユーザー手動 (`rm`) |
 | `gdr-docs.md` | **実装後の文書整理**（GDR status 更新 / ふりかえり追記 / INDEX 更新 / spec 最終化）。整理対象がなければ無音 | （引数なし） | `git log -10 --name-only` で実装系コミットを特定 → 関連文書（GDR / 改善提案 / `INDEX` / `spec`）を整合状態に更新 → 整理単位ごとに別コミット。`/gdr-flow` のフェーズ 7「完了処理」を独立コマンド化したショートカット。GDR status は `Accepted → Implemented`（`Proposed` のままなら合意漏れとして警告）、置換された旧 GDR の退避も行う（退避の前に波及チェックの付け替えを反映し、旧を前提にする有効 GDR が残れば退避しない。v1.x の導入先では `Proposed → Implemented`）。上流リポジトリでは仕様変更を含む kaizen の完了時に**版の判定**（MAJOR / MINOR / 上げない）も行う。整理の観点に**環境依存パスの確認**（`git grep`。[§環境依存パスの確認とローカル対応表](#環境依存パスの確認とローカル対応表)）を含める。**該当なしなら無音で終了** |
 | `gdr-upgrade.md` | 導入先の GDR 仕様の版を確認し、最新版との差分・移行項目を提示して採用を記録（自動移行はしない） | `[<目標版>]` | 前提定義書の宣言版（未宣言は v1.0）と上流の最新タグ（`gh api` / 未認証時は raw の CHANGELOG）を比較、user-level config の現行版が古ければ報告 → CHANGELOG の差分（互換性・移行項目）を提示 → 採否を AskUserQuestion → `_reference/` を目標版タグで取り直し（図 `assets/*.svg` を含む） → GDR-META 起票 → 必須移行がなければ宣言行を更新（ある場合は移行完了後に更新）→ 1 コミット |
-| `gdr-map.md`（任意） | GDR の蓄積を Mermaid で可視化（関係ビュー = 型付き有向グラフ / 構造ビュー = mindmap）。既定はセッション内提示のみ | `[<scope / PREFIX / GDR-ID / ファイルパス>] [構造] [系譜] [前提] [3D] [save]` | **`3D` 指定:** 3D の系譜ビューア（[06 §4](/01_GDR/guide/06_VISUALIZATION_GUIDE.md)）で表示する。スクリプトを `~/.local/share/gdr/gdr_lineage_3d.py` に取得（無ければ取得、あれば main の更新を確かめる）→ プロジェクトの直下で `notes`（無ければ `notes/91_gdr`）を読んでリポジトリの外（`/tmp`）に HTML を生成 → 指定の scope / PREFIX / GDR-ID を URL の `#` に変えて Chrome で開く → 件数・違反・警告・読めなかったものを報告。生成物はコミットしない。**引数あり:** 指定対象（scope / PREFIX / GDR-ID の近傍 / 文書内）に絞ったビューを生成。`系譜` 指定でエッジを親子の 3 種に絞り `flowchart BT` で描く（`前提` で `depends-on` を点線で足す）。**引数なし:** `notes/91_gdr/` を走査して全景の関係ビューを生成、破綻しそうな規模なら AskUserQuestion で絞り込みを提案。`save` 指定時のみ `notes/91_gdr/map/` に生成物ヘッダ付きで保存（図はキャッシュ、正は GDR 文書）。詳細は [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) |
+| `gdr-map.md`（任意） | GDR の蓄積を Mermaid で可視化（関係ビュー = 型付き有向グラフ / 構造ビュー = mindmap）。既定はセッション内提示のみ | `[<scope / PREFIX / GDR-ID / ファイルパス>] [構造] [系譜] [前提] [3D] [save]` | **`3D` 指定:** `/gdr-lineage` と同じ（下の行）。**引数あり:** 指定対象（scope / PREFIX / GDR-ID の近傍 / 文書内）に絞ったビューを生成。`系譜` 指定でエッジを親子の 3 種に絞り `flowchart BT` で描く（`前提` で `depends-on` を点線で足す）。**引数なし:** `notes/91_gdr/` を走査して全景の関係ビューを生成、破綻しそうな規模なら AskUserQuestion で絞り込みを提案。`save` 指定時のみ `notes/91_gdr/map/` に生成物ヘッダ付きで保存（図はキャッシュ、正は GDR 文書）。詳細は [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) |
+| `gdr-lineage.md`（任意） | GDR の系譜（先祖・子孫・前提）を 3D の系譜ビューアで Chrome に表示（生成物はコミットしない） | `[<scope / PREFIX / GDR-ID / ディレクトリ>] [depth=1\|2\|all] [limit=20\|50\|100\|200\|all]` | スクリプトを `~/.local/share/gdr/gdr_lineage_3d.py` に取得（無ければ取得、あれば `curl -z` で main の更新だけ取り直す。冒頭の `SPEC_VERSION` と更新日を報告）→ プロジェクトの直下で `notes`（無ければ `notes/91_gdr`）を読んでリポジトリの外（`/tmp`）に HTML を生成 → 引数の scope / PREFIX / GDR-ID・段数・上限を URL の `#` に変えて Chrome で開く → 件数・違反・警告・読めなかったものを報告。`notes/` が無ければ停止（上流リポジトリ自身は改善提案のディレクトリを読む） |
 
 > **キーワードとスラッシュコマンドの住み分け:** 短縮キーワード（`改善提案：` 等）は自然文中の流れで使う。スラッシュコマンド（`/gdr-kaizen` 等）は Tab 補完で発見性が必要な場面で使う。両方とも生きている。
 

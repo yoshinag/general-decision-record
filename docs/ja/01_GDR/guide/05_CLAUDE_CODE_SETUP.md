@@ -6,7 +6,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 
 本ガイドは [00. Getting Started](/01_GDR/guide/00_GETTING_STARTED.md) Step 2.0 から呼ばれる詳細仕様。Cursor / GitHub Copilot などを使う場合は不要。
 
-## 配置するファイル（9 ファイル + 任意 1 ファイル）
+## 配置するファイル（10 ファイル + 任意 1 ファイル）
 
 | 配置パス | 役割 |
 |---|---|
@@ -19,6 +19,7 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
 | `~/.claude/commands/gdr-archive.md` | スラッシュコマンド `/gdr-archive <パス>` の定義 |
 | `~/.claude/commands/gdr-docs.md` | スラッシュコマンド `/gdr-docs` の定義（**実装後の文書整理**、引数なし専用） |
 | `~/.claude/commands/gdr-upgrade.md` | スラッシュコマンド `/gdr-upgrade [<目標版>]` の定義（**GDR 仕様の版の更新** — 差分提示・採用記録。短縮キーワードなし） |
+| `~/.claude/agents/gdr-reviewer.md` | レビュー用サブエージェントの定義（`/gdr-review` / `レビュー：` がレビュー本体を委ねる先。レビュアーのモデルの指定はここだけに書く。[§`~/.claude/agents/gdr-reviewer.md` の仕様](#claudeagentsgdr-reviewermd-の仕様)） |
 | `~/.claude/commands/gdr-map.md` | **（任意）** スラッシュコマンド `/gdr-map [<対象>]` の定義（**可視化** — [06_VISUALIZATION_GUIDE.md](/01_GDR/guide/06_VISUALIZATION_GUIDE.md) 準拠。既定 6 キーワード体系の外） |
 
 ## `~/.claude/CLAUDE.md` の仕様
@@ -37,6 +38,11 @@ Claude Code を使う場合、`~/.claude/` 配下に **user-level の global con
      - 解釈版の読み取り: 短縮キーワード / `/gdr-*` コマンドの実行時に前提定義書の `GDR 仕様` 行をセッション内で 1 回読む（未宣言は v1.0、上流リポジトリ自身は現行版）
      - 通知: 解釈版が現行版より古い / 未宣言なら、セッション内で 1 回だけ `/gdr-upgrade` を案内する。自動移行はしない
      - 版条件付きの規則表: 版で意味が変わる規則（status の値と解釈・完了処理・置換・参照の規律・理由の出所）を版ごとに併記する。保持は直前の MAJOR まで
+3. **レビューの委任** — 以下を含む（経緯: [014 提案](/91_demo_buildup_documents.md/kaizen/14_レビューの上位モデル委任と反映のワンセット化提案.md) GDR-META-039）:
+   - `レビュー：` / `/gdr-review`（`/gdr-flow` のレビュー段を含む）は、対象の特定をメインセッションが行い、レビュー本体を `gdr-reviewer` に委ねる。メインのモデルが何であっても委ねる。続けて確認を挟まずレビュー反映まで行う（「レビューのみ」で止める）
+   - レビュアーのモデルの**指定**は `gdr-reviewer` の frontmatter の 1 か所だけに書く。ほかの文書は役割名（レビュアーのモデル）で言及する。`gdr-reviewer` を呼ぶときに `model` も `effort` も指定しない（呼び出し時の指定は frontmatter より優先されるため）。プロジェクトで変えるときは、そのプロジェクトの `.claude/agents/gdr-reviewer.md` を置く（ユーザー側の定義より優先される。ファイル全体が置き換わるので本文も写す）
+   - `gdr-reviewer` が使えないときは、その旨を伝えて自分でレビューし、ワンセットの経路では反映に進まず止める
+   - プロジェクトの `CLAUDE.md` にある `レビュー：` の定義（[03](/01_GDR/guide/03_FIRST_PROMPT_GUIDE.md) の初回プロンプト由来）は出力先と書式を定めるもので、委任とワンセットはこの節に従う（プロジェクト側が「レビューのみ」と明記している場合を除く）
 
 ## `~/.claude/commands/gdr-*.md` の仕様（共通）
 
@@ -56,10 +62,10 @@ argument-hint: <引数の形式>
 | ファイル | description | argument-hint | 動作の要点 |
 |---|---|---|---|
 | `gdr-kaizen.md` | GDR T2 形式の改善提案を `notes/20_kaizen/` 配下に生成 | `<タイトル>` | `notes/20_kaizen/{YYYY-MM-DD}_{slug}.md` に T2 構成のドラフト生成。文書のみ生成、実装着手しない。GDR は `Proposed` で起票し「理由の出所」を付ける |
-| `gdr-review.md` | 対象ファイルをセルフレビューし `{filename}_reviewed.md` を生成（引数有無で 2 モード） | `[<ファイル名 or 相対パス>]` | **引数あり:** 指定ファイルをレビュー。**引数なし:** 直近会話で言及されたファイル / `git status` の modified / `git log --name-only -3` から自動特定。候補複数なら AskUserQuestion。同位置に `{元ファイル名}_reviewed.md` を出力（横断レビューは `notes/91_gdr/review/` 配下）。区分 A〜G で整理 |
-| `gdr-apply-review.md` | `_reviewed.md` の内容を本体に統合し `_reviewed.md` を削除（引数有無で 2 モード） | `[<元ファイル名 or _reviewed.md ファイル名>]` | **引数あり:** 指定の `_reviewed.md` を統合。**引数なし:** `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion で確認。A / D / E は必ず反映、B / C / F / G は必要に応じて。統合後 `_reviewed.md` を削除し 1 コミット |
+| `gdr-review.md` | 対象ファイルをレビュー用サブエージェント（`gdr-reviewer`）でレビューし、続けてレビュー反映まで行う（引数有無で 2 モード。「レビューのみ」で止める） | `[<ファイル名 or 相対パス>] [レビューのみ]` | **引数あり:** 指定ファイルをレビュー。**引数なし:** 直近会話で言及されたファイル / `git status` の modified / `git log --name-only -3` から自動特定し、対象を 1 行示して進む（確認は待たない）。候補複数なら AskUserQuestion。同位置に `{元ファイル名}_reviewed.md` を出力（横断レビューは `notes/91_gdr/review/` 配下。`~/.claude/` 配下や `.claude/commands/` `.claude/agents/` 配下が対象なら `~/.claude/review/`）。委任のプロンプトには対象と出力先の絶対パス（または `~/` 始まり）と会話の前提を書き、`model` も `effort` も指定しない。`gdr-reviewer` が使えなければ断って自分で書き（`_reviewed.md` の冒頭に代替と明記）、反映せず止める。戻ったら [§レビュー反映の規則](#レビュー反映の規則) に従って反映する。末尾の `レビューのみ` は止める指定として読み、ファイル名から除く |
+| `gdr-apply-review.md` | `_reviewed.md` の内容を本体に統合し `_reviewed.md` を削除（引数有無で 2 モード。`/gdr-review` の後半としても使われる） | `[<元ファイル名 or _reviewed.md ファイル名>] [<もう一方のパス>]` | **引数あり:** 指定の `_reviewed.md` を統合。別ディレクトリにあるときは本体と `_reviewed.md` の両方のパスを渡す。**引数なし:** `find . -name '*_reviewed.md'` の候補（`~/.claude/review/` も含む）から更新日時で最新を第一候補にし、複数あれば AskUserQuestion で確認。統合は [§レビュー反映の規則](#レビュー反映の規則) に従う（`/gdr-review` 経由でも単体でも同じ）。単体では人の明示の指示なので、代替で書かれた `_reviewed.md` も反映してよい |
 | `gdr-bug-report.md` | バグレポートを `notes/80_bug_fix_report/` 配下に生成（引数有無で 2 モード） | `[<識別子 / ファイル名 / 症状概要>]` | **引数あり:** 任意識別子から書き起こす（外部報告 / 後日まとめ向き）。**引数なし:** **現セッションの内容**（tool 失敗 / stderr / 試行錯誤 / Classifier deny 等）を自動抽出し、末尾に「**セッションログ抜粋**」セクション（AI が試したアプローチの時系列・判断転換点・deny 原文）を残して**経緯保存**する。両モードとも 10 項構成（メタ / 症状 / 再現 / 原因 / 影響 / 回避策 / 修正案 / 推奨 / 既知事項 / 次のアクション） |
-| `gdr-flow.md` | 進行状況を確認し GDR ビルドアップサイクルをノンストップで前進（引数有無で 2 モード） | `[<作業指示 or トピック>]` | **引数あり:** 指定作業の現在地（会話文脈 / `git log` / `notes/` ファイル状態）を判定し**次フェーズだけ**実行（巻き戻し禁止）。**引数なし:** **セッション全体を概観**し進行中の作業を自動特定（直近会話 / `git log -10` / 未コミット差分 / 最近変更された `notes/` 配下）、作業の核を 1 文で言語化してから現在地判定 → 完走。曖昧時は AskUserQuestion で確認。フェーズ: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理。合意時に `Proposed → Accepted`・出所 `ai → ai-reviewed`・置換対象の旧を `Superseded`、完了処理で `Accepted → Implemented`・旧の退避。全フェーズで「GDR 参照の規律」（失効 GDR を根拠にしない）を適用。置換では波及チェック（フェーズ 1 で波及候補を列挙、4 で判定、7 で付け替えと退避の条件 — [02 §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization)）を行う |
+| `gdr-flow.md` | 進行状況を確認し GDR ビルドアップサイクルをノンストップで前進（引数有無で 2 モード） | `[<作業指示 or トピック>]` | **引数あり:** 指定作業の現在地（会話文脈 / `git log` / `notes/` ファイル状態）を判定し**次フェーズだけ**実行（巻き戻し禁止）。**引数なし:** **セッション全体を概観**し進行中の作業を自動特定（直近会話 / `git log -10` / 未コミット差分 / 最近変更された `notes/` 配下）、作業の核を 1 文で言語化してから現在地判定 → 完走。曖昧時は AskUserQuestion で確認。フェーズ: 起票 → セルフレビュー → レビュー反映 → 合意 → GDR 起票 → 実装 → 完了処理（セルフレビューとレビュー反映は `/gdr-review` で通常まとめて完了する。判定は ① `_reviewed.md` が残っていれば「レビューのみ」で止めたか中断した（反映から）、② 残っていなければ `_reviewed.md` を削除したコミットがあれば反映済み、③ どちらも無ければ未レビュー。合意では反映時に回答済みの分岐を聞き直さず、合意を聞く前にレビューで変わった点を示す。【要ユーザー判断】は「細かい設計分岐は主体的に判断」より優先して必ず聞く）。合意時に `Proposed → Accepted`・出所 `ai → ai-reviewed`・置換対象の旧を `Superseded`、完了処理で `Accepted → Implemented`・旧の退避。全フェーズで「GDR 参照の規律」（失効 GDR を根拠にしない）を適用。置換では波及チェック（フェーズ 1 で波及候補を列挙、4 で判定、7 で付け替えと退避の条件 — [02 §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization)）を行う |
 | `gdr-archive.md` | 対象ファイル / ディレクトリを `notes/_archive/` 配下へ退避（AI デフォルト除外領域） | `<ファイル or ディレクトリのパス>` | `git mv` で `notes/_archive/{元のパス}` に退避し 1 コミット。GDR 本文を退避するときは、退避する GDR を `depends-on` / `refines` で指す有効な GDR を探し、あれば一覧を示して続行を確認する（波及チェックの不変条件。止めはしない）。同名既存ファイル時はエラー終了。ディレクトリ指定時はディレクトリごと退避。物理削除はユーザー手動 (`rm`) |
 | `gdr-docs.md` | **実装後の文書整理**（GDR status 更新 / ふりかえり追記 / INDEX 更新 / spec 最終化）。整理対象がなければ無音 | （引数なし） | `git log -10 --name-only` で実装系コミットを特定 → 関連文書（GDR / 改善提案 / `INDEX` / `spec`）を整合状態に更新 → 整理単位ごとに別コミット。`/gdr-flow` のフェーズ 7「完了処理」を独立コマンド化したショートカット。GDR status は `Accepted → Implemented`（`Proposed` のままなら合意漏れとして警告）、置換された旧 GDR の退避も行う（退避の前に波及チェックの付け替えを反映し、旧を前提にする有効 GDR が残れば退避しない。v1.x の導入先では `Proposed → Implemented`）。上流リポジトリでは仕様変更を含む kaizen の完了時に**版の判定**（MAJOR / MINOR / 上げない）も行う。整理の観点に**環境依存パスの確認**（`git grep`。[§環境依存パスの確認とローカル対応表](#環境依存パスの確認とローカル対応表)）を含める。**該当なしなら無音で終了** |
 | `gdr-upgrade.md` | 導入先の GDR 仕様の版を確認し、最新版との差分・移行項目を提示して採用を記録（自動移行はしない） | `[<目標版>]` | 前提定義書の宣言版（未宣言は v1.0）と上流の最新タグ（`gh api` / 未認証時は raw の CHANGELOG）を比較、user-level config の現行版が古ければ報告 → CHANGELOG の差分（互換性・移行項目）を提示 → 採否を AskUserQuestion → `_reference/` を目標版タグで取り直し（図 `assets/*.svg` を含む） → GDR-META 起票 → 必須移行がなければ宣言行を更新（ある場合は移行完了後に更新）→ 1 コミット |
@@ -82,8 +88,8 @@ argument-hint: <引数の形式>
 |---|---|---|
 | `/gdr-bug-report` | 任意識別子から書き起こす（外部報告 / 後日まとめ向き） | 現セッションのエラー / 試行錯誤 / Classifier deny を抽出して**経緯保存**。末尾に「セッションログ抜粋」を追加 |
 | `/gdr-flow` | 指定作業の現在地を判定して次フェーズだけ実行 | セッション全体を概観し進行中の作業を自動特定 → 作業の核を 1 文で言語化 → 現在地判定 → 完走 |
-| `/gdr-review` | 指定ファイルをセルフレビュー | 直近会話言及 / `git status` modified / `git log --name-only -3` から対象を自動特定。複数候補なら AskUserQuestion |
-| `/gdr-apply-review` | 指定 `_reviewed.md` を本体に統合 | `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion |
+| `/gdr-review` | 指定ファイルをレビュー用サブエージェントでレビューし、続けて反映 | 直近会話言及 / `git status` modified / `git log --name-only -3` から対象を自動特定し、対象を 1 行示して進む。複数候補なら AskUserQuestion |
+| `/gdr-apply-review` | 指定 `_reviewed.md` を本体に統合（別ディレクトリなら本体と `_reviewed.md` の両方のパス） | `find . -name '*_reviewed.md'` の候補から更新日時で最新を第一候補にし、複数あれば AskUserQuestion |
 | `/gdr-map`（任意） | 指定対象（scope / PREFIX / GDR-ID の近傍 / 文書内）に絞ったビューを生成 | `notes/91_gdr/` 走査で全景の関係ビューを生成。破綻しそうな規模なら AskUserQuestion で絞り込みを提案 |
 
 ### 2 モード対応の書き方
@@ -110,7 +116,9 @@ argument-hint: <引数の形式>
 
 ### モード B の誤特定時のロールバック
 
-モード B で AI が「自動特定」を誤った場合、いずれのコマンドも **1 コミット単位で完結している**ため、`git revert HEAD` で安全に元に戻せる。退避（`/gdr-archive`）と統合（`/gdr-apply-review`）も `git mv` / `_reviewed.md` 削除を含めて 1 コミットになるよう設計されているため、巻き戻し手順は共通。
+モード B で AI が「自動特定」を誤った場合、多くのコマンドは **1 コミット単位で完結している**ため、`git revert HEAD` で安全に元に戻せる。退避（`/gdr-archive`）も `git mv` を含めて 1 コミットになる。
+
+レビューと反映（`/gdr-review` のワンセットと `/gdr-apply-review`）は、[§レビュー反映の規則](#レビュー反映の規則) のとおり最大 3 コミット（未コミット変更 → `_reviewed.md` → 反映と削除）に分かれる。反映だけを戻すときは最後のコミットを `git revert` する。対象の誤特定を戻すときは、反映のコミット → `_reviewed.md` のコミットの順に `git revert` する（未コミット変更のコミットは、対象ファイルの元の変更なので残す）。
 
 - 誤特定が明らかになった時点で速やかに `git revert` する（隠さない）
 - revert 後、引数ありモード（モード A）で再実行する
@@ -149,6 +157,46 @@ git mv notes/_archive/{元のディレクトリ}/{元のファイル名} {元の
 
 退避時のパス構造を反転するだけで戻る。
 ```
+
+## `~/.claude/agents/gdr-reviewer.md` の仕様
+
+Claude Code のサブエージェントは markdown + frontmatter 形式で `~/.claude/agents/`（ユーザー）または `.claude/agents/`（プロジェクト。同名ならこちらが優先）に置く。`gdr-reviewer` はレビュー本体を書くサブエージェントで、呼び出し側（メインセッション）の会話を見られない。
+
+```yaml
+---
+name: gdr-reviewer
+description: GDR 方法論のレビュー担当（上位モデル）。対象ファイルを批判的にレビューし {元ファイル名}_reviewed.md を書き出す。対象の特定は呼び出し側が済ませてから渡す
+model: <レビュアーのモデルのエイリアス>   # 例。特定のモデルを推奨しない。モデルの指定はここだけに書く
+effort: high                            # 推論の強さ（low / medium / high / xhigh / max。使える段階はモデルによる）
+tools: Read, Grep, Glob, Bash, Write
+---
+```
+
+`effort:` は必ず書く。メインと別のモデルを指定したサブエージェントには、セッションの推論の強さ（`/effort` / `--effort`）が適用されないため（[公式: Subagents](https://code.claude.com/docs/en/sub-agents)）。呼び出し時の `effort` パラメータと環境変数 `CLAUDE_CODE_EFFORT_LEVEL` は frontmatter より優先されるので、`gdr-reviewer` を呼ぶときは `model` も `effort` も指定しない。
+
+本体に最低限含めるもの:
+
+- 対象を編集もコミットもしない（`tools:` に書き出し用の Write があるので、本文の指示で守る）
+- `_reviewed.md` の書き出しが成果物で、返答は要点（書き出したパス・A 区分の要点・【要ユーザー判断】の件数・解釈版）だけにする
+- 入力: 対象のパス・出力先のパス・会話の前提（呼び出し側がプロンプトに書く）
+- 前提定義書の `GDR 仕様` 行から解釈版を読む（未宣言は v1.0、上流リポジトリ自身は現行版）。対象が GDR 文書でないときは GDR の書式・規律の観点を飛ばし、その旨を冒頭に書く
+- 観点: 内部整合性 / 過剰設計 / 不足 / リスク / 命名 / GDR の書式・規律
+- 出力構造: A. 実装着手前に反映が必要 / B. 実装中に決めて良い / C. 完了時に再評価 / D. 過剰・削れる候補 / E. 整合性チェック結果 / F. 推奨される反映の優先順 / G. 全体評価
+- A・D・E の各指摘に【そのまま反映可】（直し方が 1 通り）／【要ユーザー判断】（選択肢と推奨つき。決定事項・節をまるごと削る提案もこちら）を付ける。作り直し・取り下げを勧めるときは G に明記する
+
+## レビュー反映の規則
+
+`/gdr-review`（ワンセットの後半）と `/gdr-apply-review`（単体）は同じ規則で反映する。ツールに依存しない原則は [02 §5.2](/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md#52-判断は積み上がるincremental-crystallization) のレビューと反映（経緯: [014 提案](/91_demo_buildup_documents.md/kaizen/14_レビューの上位モデル委任と反映のワンセット化提案.md) GDR-META-039）。
+
+| 項目 | 内容 |
+|---|---|
+| 記録と取り消し | git 管理下: ① 本体の未コミット変更を先にコミット → ② `_reviewed.md` をコミット → ③ 反映と `_reviewed.md` の削除を 1 コミット。触れたファイルだけを `git add` し、メッセージはプロジェクトのコミット規約に従う。コミットの可否はプロジェクトの運用ルール（[00 Step 5](/01_GDR/guide/00_GETTING_STARTED.md)）に従い、確認が要るプロジェクトでは聞いてからコミットする。コミットできないときは反映に進まず `_reviewed.md` を残して止める。git 管理外: 反映前に本体の写しを取り、反映が終わったら `_reviewed.md`・写しとも消す |
+| 止める | 反映の前に `_reviewed.md` を全文読む（要点の返答だけで反映しない）。`_reviewed.md` が書き出されていない、全体評価が作り直し・取り下げを勧めている、ワンセットの経路で代替のレビューだった → 反映せず止める。事実誤認と判断した指摘は反映せず理由を報告する |
+| 対象の絞り込み | `Proposed` 以外（`Accepted` / `Implemented` / `Superseded` / `Rejected`）の GDR 本文への指摘: 軽微な訂正と判断したものは【要ユーザー判断】として聞いてから反映し、それ以外は置換 GDR の起票候補として報告する。`_reference/`・`_archive/`・レビュー対象として渡していないファイル・コードへの指摘は反映せず報告する |
+| 指摘の印 | 【そのまま反映可】は確認なしで反映する。【要ユーザー判断】は AskUserQuestion で聞いてから反映する（1 回に聞ける数を超えるときは重要な順に分ける）。印の無い古い形式の `_reviewed.md` では、選択肢が複数ある指摘を【要ユーザー判断】に入れる |
+| 合意との境界 | 反映時の回答は本文を確定するためのもので、GDR の合意ではない。status と理由の出所は変えない |
+| 報告 | 反映したもの / 反映しなかったもの（理由つき）/ 回答で決めたこと / 未確認の点 / コミット hash（止めて残したときはファイルの場所） |
+| 版 | 解釈版によらず適用する。v1.x の導入先では、反映の対象に `Proposed` の GDR があるとき、反映の前に合意済みかどうかを 1 回聞き、合意済みなら `Proposed` 以外と同じに扱う。「理由の出所は変えない」は v1.x では当たらない（理由の出所を求めないため） |
 
 ## 環境依存パスの確認とローカル対応表
 
@@ -209,7 +257,7 @@ CLAUDE.md の明記だけでは AI が読み込んでしまう懸念がある場
 
 ## 配置後: Claude Code を一度再起動する
 
-`~/.claude/CLAUDE.md` および `~/.claude/commands/*.md` は **Claude Code の起動時に読み込まれる**。既に Claude Code セッションを開いている場合、ファイルを配置・更新しても自動では反映されない。
+`~/.claude/CLAUDE.md`・`~/.claude/commands/*.md`・`~/.claude/agents/*.md` は **Claude Code の起動時に読み込まれる**。既に Claude Code セッションを開いている場合、ファイルを配置・更新しても自動では反映されない。セッションの途中で `CLAUDE.md` を直しても、そのセッションから呼ぶサブエージェントには開始時の版が渡る。
 
 配置後は一度セッションを終了してから再起動する:
 

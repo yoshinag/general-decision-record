@@ -39,7 +39,7 @@ git clone https://github.com/yoshinag/general-decision-record.git
 
 ### Step 2.0: （Claude Code 利用者のみ）global config を配置する
 
-Claude Code を使う場合、`~/.claude/` 配下に user-level の global CLAUDE.md と 5 つの `gdr-*` スラッシュコマンドを置くと、すべてのプロジェクトで GDR 方法論と短縮キーワード / スラッシュコマンドが自動有効になる。Step 2.1 以降は AI が GDR 文脈を把握した状態で進む。
+Claude Code を使う場合、`~/.claude/` 配下に user-level の global CLAUDE.md、`gdr-*` スラッシュコマンド（8 つ）、レビュー用サブエージェント `gdr-reviewer` を置くと、すべてのプロジェクトで GDR 方法論と短縮キーワード / スラッシュコマンドが自動有効になる。Step 2.1 以降は AI が GDR 文脈を把握した状態で進む。
 
 > Cursor / GitHub Copilot などを使う場合は本節をスキップしてよい。
 
@@ -63,6 +63,7 @@ user-level の global config を配置して。
 - ~/.claude/commands/gdr-archive.md
 - ~/.claude/commands/gdr-docs.md
 - ~/.claude/commands/gdr-upgrade.md
+- ~/.claude/agents/gdr-reviewer.md
 
 要件:
 - 各ファイルは 05_CLAUDE_CODE_SETUP.md の仕様（frontmatter / 動作 /

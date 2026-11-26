@@ -8,6 +8,20 @@ GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレート�
 
 ---
 
+## v2.7 — 2026-11-26
+
+- **互換性:** MINOR（user-level config に任意のコマンドを足しただけ。GDR の書式・status 値・規則は変わらない。必須の移行なし）
+- **要約:**
+  - **任意のコマンド `/gdr-lineage`:** 3D の系譜ビューア（`tools/gdr_lineage_3d.py`）を取得（`~/.local/share/gdr/` に置き、main の更新だけ取り直す）・生成（`notes` を読み、リポジトリの外に出力）し、Chrome で開く。引数の scope / PREFIX / GDR-ID・段数・表示数の上限を URL の `#` に変える。`/gdr-map … 3D` も同じ（[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)、[06 §4](docs/ja/01_GDR/guide/06_VISUALIZATION_GUIDE.md)）
+  - **取得の仕方の訂正:** ツールは版の対象外なので、タグではなく main の最新を取得し、スクリプト冒頭の `SPEC_VERSION` と更新日で確かめる（v2.6 の移行項目の記述を訂正）
+  - ツール側の変更（版の対象外。記録のため）: 3D の系譜ビューアに scope / PREFIX の絞り込みと関連の段数、表示数の上限（既定 50）を追加。対応するブラウザを Chrome だけにした
+  - 根拠: [kaizen 015](docs/ja/91_demo_buildup_documents.md/kaizen/15_GDRの系譜の明確化とUUIDv7の検討提案.md)（GDR-META-040）の発行後の追補。新しい GDR は起票していない（任意ツールの使い方の追加で、判断の本質は変わらないため）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: なし
+  - 任意: 3D の系譜ビューアを使うなら `commands/gdr-lineage.md` を置く（`commands/gdr-map.md` の「3D」も使うなら同時に更新）
+- **user-level config:** 更新必要 — `CLAUDE.md`（コマンド表に `/gdr-lineage`・現行版 v2.7）、新規 `commands/gdr-lineage.md`（任意）、`commands/gdr-map.md`（「3D」）
+
 ## v2.6 — 2026-11-26
 
 - **互換性:** MINOR（任意フィールド `uid` の追加と、推奨・警告だけ。書式・status 値・型の語彙・既存の値の意味は変わらない。必須の移行なし）。**解釈版によらず適用**する（v1.x には `Rejected` が無く却下案からの派生が生じないだけで、読み替えは要らない）。**user-level config を更新すると、AI は GDR を起票するたびに親・日時・`uid` を書き、`uid` の生成に `python3` を 1 回実行するようになる**（実行の許可を求められることがある）

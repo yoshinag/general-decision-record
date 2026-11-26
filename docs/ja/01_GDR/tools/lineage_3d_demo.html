@@ -1,4 +1,4 @@
-<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:17:23+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
+<!-- 生成物・手編集禁止。gdr_lineage_3d.py（GDR 仕様 v2.6 向け、2026-11-26 版）が 2026-11-26T18:19:30+09:00 に生成。データ: demo: 架空の GDR（系譜・前提・違反の見本）（‐‐demo） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -273,15 +273,12 @@ function fillFilters() {
 function loadDataset(i, f) {
   cur = DATASETS[i]; clearSel(); fillFilters();
   document.getElementById('fWord').value = f?.get('q') || '';
-  // 既定は scope・PREFIX ともリストの 1 番目（初回の表示件数を抑える）。PREFIX はその scope にある 1 番目。
-  // status の既定は Proposed（未確定の GDR を先に見る。Proposed が無いデータセットではすべて）。
-  // URL で検索ワード・scope・PREFIX・status・GDR ID のどれかを指定したときは、指定しなかったものを「すべて」のままにする
+  // status の既定は Proposed（未確定の GDR に絞ると初回の表示件数を抑えられる。Proposed が無いデータセットではすべて）。
+  // scope・PREFIX の既定はすべて。URL で検索ワード・scope・PREFIX・status・GDR ID のどれかを指定したときは、
+  // 指定しなかったものを「すべて」のままにする
   if (!f || !['q','scope','prefix','status','id'].some(k => f.get(k))) {
-    const fsEl = document.getElementById('fScope'), fpEl = document.getElementById('fPrefix'), fstEl = document.getElementById('fStatus');
+    const fstEl = document.getElementById('fStatus');
     if ([...fstEl.options].some(o => o.value === 'Proposed')) fstEl.value = 'Proposed';
-    if (fsEl.options.length > 1) fsEl.value = fsEl.options[1].value;
-    const first = cur.nodes.filter(n => n.status !== 'Unknown' && (!fsEl.value || scopesOf(n).includes(fsEl.value))).map(n => prefixOf(n.id)).filter(Boolean).sort()[0];
-    if (first) fpEl.value = first;
   }
   if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['status','fStatus'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }

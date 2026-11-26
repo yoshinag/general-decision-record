@@ -31,8 +31,8 @@ GDR 仕様の版の対象外（取得リストに入れない。要る導入先�
   - 画面で scope / PREFIX を選ぶと、当てはまる GDR と、そこから表示中のリンクを指定の段数（1 段・2 段・すべて）
     たどった GDR だけを描く。表示数の上限も選べる（既定 50。超えたら、絞り込み中は当てはまる GDR → 近い段の順、
     絞り込みなしは日時の新しい順に残す）。URL の `#0?scope=arch&prefix=ARCH&depth=1&limit=50` でも指定できる
-  - scope・PREFIX の既定はリストの 1 番目（PREFIX はその scope にある 1 番目）、status の既定は Proposed（無ければすべて）。
-    「すべて」も選べる。URL で検索ワード・scope・PREFIX・status・GDR ID のどれかを指定したときは、指定しなかったものは「すべて」になる
+  - status の既定は Proposed（無ければすべて）、scope・PREFIX の既定はすべて。URL で検索ワード・scope・PREFIX・status・
+    GDR ID のどれかを指定したときは、指定しなかったものは「すべて」になる
   - 検索ワード（空白区切りで AND。GDR ID・要約・scope・本文を大文字小文字を区別せずに探す）も絞り込みに使える。scope / PREFIX と
     併せると、すべてに当てはまる GDR が起点になる。URL では `q=`
   - status でも絞り込める（すべて・有効・失効・各 status。既定は Proposed）。検索ワード・scope・PREFIX の起点と関連の段数でたどった
@@ -763,15 +763,12 @@ function fillFilters() {
 function loadDataset(i, f) {
   cur = DATASETS[i]; clearSel(); fillFilters();
   document.getElementById('fWord').value = f?.get('q') || '';
-  // 既定は scope・PREFIX ともリストの 1 番目（初回の表示件数を抑える）。PREFIX はその scope にある 1 番目。
-  // status の既定は Proposed（未確定の GDR を先に見る。Proposed が無いデータセットではすべて）。
-  // URL で検索ワード・scope・PREFIX・status・GDR ID のどれかを指定したときは、指定しなかったものを「すべて」のままにする
+  // status の既定は Proposed（未確定の GDR に絞ると初回の表示件数を抑えられる。Proposed が無いデータセットではすべて）。
+  // scope・PREFIX の既定はすべて。URL で検索ワード・scope・PREFIX・status・GDR ID のどれかを指定したときは、
+  // 指定しなかったものを「すべて」のままにする
   if (!f || !['q','scope','prefix','status','id'].some(k => f.get(k))) {
-    const fsEl = document.getElementById('fScope'), fpEl = document.getElementById('fPrefix'), fstEl = document.getElementById('fStatus');
+    const fstEl = document.getElementById('fStatus');
     if ([...fstEl.options].some(o => o.value === 'Proposed')) fstEl.value = 'Proposed';
-    if (fsEl.options.length > 1) fsEl.value = fsEl.options[1].value;
-    const first = cur.nodes.filter(n => n.status !== 'Unknown' && (!fsEl.value || scopesOf(n).includes(fsEl.value))).map(n => prefixOf(n.id)).filter(Boolean).sort()[0];
-    if (first) fpEl.value = first;
   }
   if (f) { for (const [k, id] of [['scope','fScope'],['prefix','fPrefix'],['status','fStatus'],['depth','fDepth'],['limit','fLimit']]) { const v = f.get(k); if (v != null && [...document.getElementById(id).options].some(o => o.value === v)) document.getElementById(id).value = v; } }
   if (!cur._placed) { placeY(cur); cur.links.forEach((l, i) => l.k = i); cur._placed = true; }

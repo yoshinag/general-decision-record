@@ -1,12 +1,28 @@
 # 変更履歴
 
-GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレートと、[Claude Code セットアップ仕様](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) が定める user-level config）の版を記録する。
+GDR 仕様（`docs/ja/01_GDR/` 配下の仕様・ガイド・テンプレートと、[Claude Code セットアップ仕様](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md) が定める user-level config）の版を記録する。`docs/ja/01_GDR/tools/` は任意の補助ツールで、版の対象外とする（追加・削除と、読む書式・系譜の定義に関わる変更だけを各版の要約に書く。ツール自身が対応する版と更新日を持つ）。
 
 - **版の付け方:** `vMAJOR.MINOR`。導入先が採用するときに**必須の移行項目がある**変更（書式違反化、既存の値の意味の変更）は MAJOR、ない変更は MINOR。移行作業が生じない文言修正等では版を上げない（[kaizen 010](docs/ja/91_demo_buildup_documents.md/kaizen/10_GDR仕様の版管理と最新版通知提案.md) GDR-META-031）
 - **各版の記載項目:** 互換性 / 要約と根拠 / 導入先の移行項目（必須・推奨・任意）/ user-level config の更新要否
 - **導入先での採用:** 前提定義書の `GDR 仕様: vX.Y` 行で宣言し、版の変更は GDR-META として記録する。`/gdr-upgrade` で差分と移行項目を確認できる
 
 ---
+
+## v2.6 — 2026-11-26
+
+- **互換性:** MINOR（任意フィールド `uid` の追加と、推奨・警告だけ。書式・status 値・型の語彙・既存の値の意味は変わらない。必須の移行なし）。**解釈版によらず適用**する（v1.x には `Rejected` が無く却下案からの派生が生じないだけで、読み替えは要らない）。**user-level config を更新すると、AI は GDR を起票するたびに親・日時・`uid` を書き、`uid` の生成に `python3` を 1 回実行するようになる**（実行の許可を求められることがある）
+- **要約:**
+  - **系譜（先祖・子孫）:** GDR の親子を、置換・`refines`・GDR を指す `derived-from` の 3 種のリンクで定義する。`depends-on` は親子ではなく前提で、前提の連鎖（`depends-on` と `refines`）を親子と並べてたどる。型の選び分けの目安、不変条件（閉路なし・置換と派生では親の日時 ≤ 子の日時。`refines` は日時を比べない）、起票時に親を書く推奨。後継としてたどるのは置換リンクだけ（参照の規律は変えない）
+  - **`uid`（任意フィールド）:** GDR レコード 1 件の変わらない識別子として UUID v7 を持たせる。GDR ID は人が読む ID としてそのまま使い、リンクの対象も GDR ID のまま。`uid` は 01 §3.1 の 1 行のコマンド（Python 3.7 以上）で生成し、手で書かない。採番しなおしても変えない。AI 起票時は `uid` と日時を書く（推奨）
+  - **たどる手段:** プロンプト `系譜 [GDR-ID]`（04 §5）、`/gdr-map … 系譜`（06 §4 の関係ビューの絞り込み）
+  - **3D の系譜ビューア（任意の補助ツール）:** `docs/ja/01_GDR/tools/gdr_lineage_3d.py` と見本（架空の GDR）を追加。版の対象外・取得リスト外。既定の可視化（Mermaid・生成物を永続化しない。GDR-META-026）は変えない
+  - [01 §3・§3.1](docs/ja/01_GDR/01_GENERAL_DECISION_RECORD.md)、[02 §6](docs/ja/01_GDR/02_AI_DRIVEN_GDR_BUILDUP.md)、[04 §4・§5](docs/ja/01_GDR/guide/04_PROMPT_GUIDE.md)、[06 §4・§5](docs/ja/01_GDR/guide/06_VISUALIZATION_GUIDE.md)、[05](docs/ja/01_GDR/guide/05_CLAUDE_CODE_SETUP.md)、[T2](docs/ja/01_GDR/templates/T2_BUILDUP_RECORD.md)、[00](docs/ja/01_GDR/guide/00_GETTING_STARTED.md) を更新。03・T0・T1・図は変更なし
+  - 根拠: [kaizen 015](docs/ja/91_demo_buildup_documents.md/kaizen/15_GDRの系譜の明確化とUUIDv7の検討提案.md)（GDR-META-040）。UUID v7 を GDR ID そのものに採ることは退けた（親子を表さず、人が読めず、MAJOR になるため）
+- **導入先の移行項目:**
+  - 必須: なし
+  - 推奨: user-level config を更新する（`CLAUDE.md`・`commands/gdr-kaizen.md`・`commands/gdr-flow.md`・`commands/gdr-map.md`・`agents/gdr-reviewer.md`）。更新後に `系譜`（引数なし）で不変条件の違反を一度確かめる
+  - 任意: `_reference/` の 01・02・04・06・T2 を v2.6 で取り直す。既存の GDR に親や `uid` を遡って書く（軽微な追記）。3D の系譜ビューアを使うなら `tools/` からタグを指定して取得し、リポジトリの外で実行する
+- **user-level config:** 更新必要 — `CLAUDE.md`（不可侵ルールに系譜と `uid`・現行版 v2.6）、`commands/gdr-kaizen.md`・`commands/gdr-flow.md`（起票時に親・日時・`uid`。GDR 起票では `uid` を写す）、`commands/gdr-map.md`（`系譜` / `前提`）、`agents/gdr-reviewer.md`（親の記入漏れ・型の選び方・`uid` の確認）
 
 ## v2.5 — 2026-11-26
 
